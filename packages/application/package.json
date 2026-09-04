@@ -1,0 +1,67 @@
+{
+  "name": "@frely/application",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/public-server.d.ts",
+      "import": "./dist/public-server.js"
+    },
+    "./application-internal": {
+      "types": "./dist/application-internal.d.ts",
+      "import": "./dist/application-internal.js"
+    },
+    "./runtime": {
+      "types": "./dist/storage/runtime.d.ts",
+      "import": "./dist/storage/runtime.js"
+    },
+    "./internal/verification": {
+      "types": "./dist/internal-verification.d.ts",
+      "import": "./dist/internal-verification.js"
+    },
+    "./internal/operations": {
+      "types": "./dist/internal-operations.d.ts",
+      "import": "./dist/internal-operations.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/audit": "workspace:*",
+    "@frely/authority": "workspace:*",
+    "@frely/billing": "workspace:*",
+    "@frely/capture": "workspace:*",
+    "@frely/config": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/identity": "workspace:*",
+    "@frely/entitlement": "workspace:*",
+    "@frely/auth": "workspace:*",
+    "@frely/model-access": "workspace:*",
+    "@frely/observability": "workspace:*",
+    "@frely/postgres": "workspace:*",
+    "@frely/provider-runtime": "workspace:*",
+    "@frely/request-execution": "workspace:*",
+    "@frely/tenancy-context": "workspace:*",
+    "@dsnp/parquetjs": "1.8.8",
+    "canonicalize": "^3.0.0",
+    "fast-json-patch": "^3.1.1",
+    "pg": "^8.22.0",
+    "undici": "^8.9.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.3",
+    "prisma": "7.9.1"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

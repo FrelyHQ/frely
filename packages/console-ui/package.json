@@ -1,0 +1,141 @@
+{
+  "name": "@frely/console-ui",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx"
+    },
+    "./client": {
+      "types": "./src/client.ts",
+      "import": "./src/client.ts"
+    },
+    "./models": {
+      "types": "./src/models.ts",
+      "import": "./src/models.ts"
+    },
+    "./messages": {
+      "types": "./src/messages.ts",
+      "import": "./src/messages.ts"
+    },
+    "./search-select": {
+      "types": "./src/search-select.tsx",
+      "import": "./src/search-select.tsx"
+    },
+    "./access-point-description": {
+      "types": "./src/access-point-description.tsx",
+      "import": "./src/access-point-description.tsx"
+    },
+    "./portal-menu": {
+      "types": "./src/portal-menu.tsx",
+      "import": "./src/portal-menu.tsx"
+    },
+    "./console-dialog": {
+      "types": "./src/console-dialog.tsx",
+      "import": "./src/console-dialog.tsx"
+    },
+    "./request-capture-dialog": {
+      "types": "./src/request-capture-dialog.tsx",
+      "import": "./src/request-capture-dialog.tsx"
+    },
+    "./pipeline-plugin-chips": {
+      "types": "./src/pipeline-plugin-chips.tsx",
+      "import": "./src/pipeline-plugin-chips.tsx"
+    },
+    "./request-log-filters": {
+      "types": "./src/request-log-filters.tsx",
+      "import": "./src/request-log-filters.tsx"
+    },
+    "./request-history-table": {
+      "types": "./src/request-history-table.tsx",
+      "import": "./src/request-history-table.tsx"
+    },
+    "./query-client": {
+      "types": "./src/query-client.ts",
+      "import": "./src/query-client.ts"
+    },
+    "./unauthorized-response": {
+      "types": "./src/unauthorized-response.ts",
+      "import": "./src/unauthorized-response.ts"
+    },
+    "./session-recovery-dialog": {
+      "types": "./src/session-recovery-dialog.tsx",
+      "import": "./src/session-recovery-dialog.tsx"
+    },
+    "./data-table": {
+      "types": "./src/data-table.tsx",
+      "import": "./src/data-table.tsx"
+    },
+    "./material-table": {
+      "types": "./src/material-table.tsx",
+      "import": "./src/material-table.tsx"
+    },
+    "./material-table-pagination": {
+      "types": "./src/material-table-pagination.tsx",
+      "import": "./src/material-table-pagination.tsx"
+    },
+    "./pagination": {
+      "types": "./src/pagination.ts",
+      "import": "./src/pagination.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./api-error": {
+      "types": "./src/api-error.ts",
+      "import": "./src/api-error.ts"
+    },
+    "./credit-topup": {
+      "types": "./src/credit-topup.tsx",
+      "import": "./src/credit-topup.tsx"
+    },
+    "./plan-budget": {
+      "types": "./src/plan-budget.tsx",
+      "import": "./src/plan-budget.tsx"
+    },
+    "./sign-out-button": {
+      "types": "./src/sign-out-button.tsx",
+      "import": "./src/sign-out-button.tsx"
+    },
+    "./password-change": {
+      "types": "./src/password-change.tsx",
+      "import": "./src/password-change.tsx"
+    },
+    "./api-key-plan-source-restriction": {
+      "types": "./src/api-key-plan-source-restriction.tsx",
+      "import": "./src/api-key-plan-source-restriction.tsx"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@frely/auth": "workspace:*",
+    "@frely/ui": "workspace:*",
+    "@mui/icons-material": "^7.3.11",
+    "@mui/material": "^7.3.11",
+    "@mui/system": "^7.3.11",
+    "@mui/x-date-pickers": "^7.29.4",
+    "@tanstack/react-form": "^1.33.1",
+    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-table": "^8.21.3",
+    "lucide-react": "^1.24.0",
+    "material-react-table": "^3.2.1"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.2.3"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

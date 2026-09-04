@@ -1,0 +1,52 @@
+apiVersion: friday-relay.observability/v1
+kind: SigNozDashboardCatalog
+dashboards:
+  - name: Web Admin UI Surfaces
+    defaultWindow: 30d
+    variables: [service, service.version, release, surface_type, surface_name]
+    panels:
+      - title: Surface count and p50/p75/p95/p99 ranking
+        signal: ui_surface_open_duration_ms
+        groupBy: [service, service.version, surface_type, surface_name, release]
+        aggregates: [count, p50, p75, p95, p99]
+      - title: Surface terminal ratio
+        signal: ui_surface_open_duration_ms
+        groupBy: [service, surface_type, surface_name, release, result]
+        aggregates: [count, ratio]
+      - title: Current release versus previous accepted release
+        signal: ui_surface_open_duration_ms
+        groupBy: [service, surface_type, surface_name, release]
+        aggregates: [p95, p99]
+      - title: Telemetry sample and exporter gap
+        signals: [ui_surface_open_duration_ms, otelcol_exporter_send_failed_metric_points, otelcol_exporter_send_failed_spans]
+        aggregates: [count, rate]
+  - name: Web Admin Web Vitals
+    defaultWindow: 30d
+    variables: [service, service.version, release, route]
+    panels:
+      - { title: LCP, signal: web_vital_lcp_ms, aggregates: [p50, p75, p95, p99] }
+      - { title: INP, signal: web_vital_inp_ms, aggregates: [p50, p75, p95, p99] }
+      - { title: CLS, signal: web_vital_cls_score, aggregates: [p50, p75, p95, p99] }
+      - { title: TTFB, signal: web_vital_ttfb_ms, aggregates: [p50, p75, p95, p99] }
+      - { title: FCP, signal: web_vital_fcp_ms, aggregates: [p50, p75, p95, p99] }
+  - name: Web Admin RSC and Repository
+    defaultWindow: 30d
+    variables: [service.name, friday.release, route, operation]
+    panels:
+      - { title: RSC preparation latency, signal: friday.rsc.prepare, aggregate: [p50, p95, p99] }
+      - { title: Repository latency, signal: friday.repository.operation, aggregate: [p50, p95, p99] }
+      - { title: Collection page size versus returned rows, signal: friday.repository.operation, fields: [friday.collection.page_size, friday.collection.items_returned, db.response.returned_rows] }
+  - name: Web Admin Node Runtime
+    defaultWindow: 30d
+    variables: [service, service.version, friday.release, friday.runtime_fingerprint]
+    panels:
+      - { title: Heap used, signal: process_runtime_heap_used_bytes, aggregates: [p50, p95, p99] }
+      - { title: Resident memory, signal: process_runtime_rss_bytes, aggregates: [p50, p95, p99] }
+      - { title: Event-loop utilization, signal: process_runtime_event_loop_utilization, aggregates: [p50, p95, p99] }
+savedQueries:
+  - name: teams-surface-to-rsc-and-repository
+    rootSpan: friday.ui.surface.open
+    filters:
+      surface_type: page
+      surface_name: /owner/teams
+    relatedSpanNames: [next.framework, friday.rsc.prepare, friday.repository.operation]

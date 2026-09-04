@@ -1,0 +1,55 @@
+{
+  "name": "@frely/admin",
+  "version": "0.64.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1 --port 43002",
+    "typecheck": "bun run --cwd ../.. tsc --noEmit -p apps/admin/tsconfig.json",
+    "build": "bun ../../scripts/build-frontend-app.mjs --manifest ../../ops/build/frontend-build-contracts.json --app admin --workspace-root ../..",
+    "build:framework": "vite build",
+    "start": "bun .output/runtime/serve.mjs"
+  },
+  "dependencies": {
+    "@dsnp/parquetjs": "1.8.8",
+    "@frely/application": "workspace:*",
+    "@frely/audit": "workspace:*",
+    "@frely/auth": "workspace:*",
+    "@frely/authority": "workspace:*",
+    "@frely/billing": "workspace:*",
+    "@frely/config": "workspace:*",
+    "@frely/console-ui": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/entitlement": "workspace:*",
+    "@frely/model-access": "workspace:*",
+    "@frely/gateway-core": "workspace:*",
+    "@frely/identity": "workspace:*",
+    "@frely/observability": "workspace:*",
+    "@frely/pricing": "workspace:*",
+    "@frely/providers": "workspace:*",
+    "@frely/team-console-ui": "workspace:*",
+    "@frely/tenancy": "workspace:*",
+    "@frely/ui": "workspace:*",
+    "@frely/ui-application": "workspace:*",
+    "@tanstack/react-form": "^1.33.1",
+    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-router": "1.170.32",
+    "@tanstack/react-start": "1.168.49",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "srvx": "0.12.7",
+    "thrift": "0.23.0",
+    "undici": "8.9.0",
+    "web-vitals": "6.2.1"
+  },
+  "devDependencies": {
+    "@tanstack/router-plugin": "1.168.35",
+    "@vitejs/plugin-react": "6.1.1",
+    "vite": "8.2.2"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

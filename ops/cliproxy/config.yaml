@@ -1,0 +1,73 @@
+# CLIProxyAPI v7.2.145 Friday evidence distribution production template.
+# The entrypoint replaces the single inference-key placeholder in tmpfs. This
+# repository copy is mounted read-only and must never contain deployment secrets.
+host: ""
+port: 8317
+
+tls:
+  enable: false
+  cert: ""
+  key: ""
+
+remote-management:
+  # Gateway/Admin are separate containers, so authenticated remote management is
+  # required. Compose does not publish this port outside its internal network.
+  allow-remote: true
+  secret-key: ""
+  disable-control-panel: true
+  disable-auto-update-panel: true
+
+auth-dir: "/root/.cli-proxy-api"
+api-keys:
+  - "__FRIDAY_RELAY_CLIPROXY_API_KEY__"
+
+debug: false
+pprof:
+  enable: false
+  addr: "127.0.0.1:8316"
+
+# Keep commercial mode as the defense-in-depth boundary against forced error
+# request logging when request-log is false.
+# Commercial mode removes that request-log middleware entirely.
+commercial-mode: true
+request-log: false
+logging-to-file: true
+logs-max-total-size-mb: 100
+error-logs-max-files: 1
+usage-statistics-enabled: false
+
+# This is the only path from CLIProxyAPI's internal-only networks to the
+# public Internet. The egress proxy validates every DNS answer and pins each
+# connection to a validated public IP. Per-credential proxy bypasses are not
+# supported by Frely managed bindings.
+proxy-url: "http://cliproxy-egress:8318"
+
+force-model-prefix: true
+passthrough-headers: false
+request-retry: 0
+# CPA interprets zero as "try every available credential". One means that
+# exactly one credential may be selected for this Provider invocation.
+max-retry-credentials: 1
+max-retry-interval: 30
+disable-cooling: false
+save-cooldown-status: false
+# Zero preserves the upstream legacy 60-second transient-error cooldown.
+transient-error-cooldown-seconds: 0
+
+quota-exceeded:
+  switch-project: false
+  switch-preview-model: false
+  antigravity-credits: false
+
+routing:
+  strategy: "round-robin"
+  session-affinity: false
+
+streaming:
+  keepalive-seconds: 0
+  bootstrap-retries: 0
+
+plugins:
+  enabled: false
+
+ws-auth: true

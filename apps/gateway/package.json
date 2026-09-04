@@ -1,0 +1,31 @@
+{
+  "name": "@frely/gateway",
+  "version": "0.64.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/application": "workspace:*",
+    "@frely/capture": "workspace:*",
+    "@frely/config": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/entitlement": "workspace:*",
+    "@frely/gateway-core": "workspace:*",
+    "@frely/identity": "workspace:*",
+    "@frely/observability": "workspace:*",
+    "@frely/provider-runtime": "workspace:*",
+    "@frely/providers": "workspace:*",
+    "@frely/tenancy": "workspace:*"
+  },
+  "devDependencies": {},
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

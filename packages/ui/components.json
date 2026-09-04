@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@frely/ui/components",
+    "utils": "@frely/ui/lib/utils",
+    "ui": "@frely/ui/components",
+    "lib": "@frely/ui/lib",
+    "hooks": "@frely/ui/hooks"
+  },
+  "iconLibrary": "lucide"
+}

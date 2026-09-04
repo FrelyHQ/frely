@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: ${FRIDAY_RELAY_POSTGRES_IMAGE:-postgres:18.4}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_POSTGRES_MEMORY_LIMIT:-768m}
+    cpus: "${FRIDAY_RELAY_POSTGRES_CPU_LIMIT:-1.0}"
+    pids_limit: ${FRIDAY_RELAY_POSTGRES_PIDS_LIMIT:-256}
+    shm_size: ${FRIDAY_RELAY_POSTGRES_SHM_SIZE:-128m}
+    environment:
+      POSTGRES_DB: ${FRIDAY_RELAY_PG_DATABASE:-friday_relay}
+      POSTGRES_USER: ${FRIDAY_RELAY_PG_USER:-friday_relay}
+      POSTGRES_PASSWORD: ${FRIDAY_RELAY_PG_PASSWORD:?FRIDAY_RELAY_PG_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:${FRIDAY_RELAY_PG_PORT:-55432}:5432"
+    volumes:
+      - friday-relay-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\" -q"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "${FRIDAY_RELAY_LOG_MAX_SIZE:-20m}"
+        max-file: "${FRIDAY_RELAY_LOG_MAX_FILE:-5}"
+
+volumes:
+  friday-relay-postgres-data:

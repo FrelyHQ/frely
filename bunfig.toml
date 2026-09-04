@@ -1,0 +1,5 @@
+[install]
+# Preserve strict dependency visibility and prevent phantom imports.
+linker = "isolated"
+# Keep the committed lockfile human-reviewable and deterministic.
+saveTextLockfile = true

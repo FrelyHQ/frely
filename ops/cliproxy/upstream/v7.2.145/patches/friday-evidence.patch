@@ -1,0 +1,269 @@
+--- a/internal/api/server.go
++++ b/internal/api/server.go
+@@ -137,0 +138,2 @@
++	engine.Use(middleware.CPABasicEvidenceMiddleware())
++	engine.Use(middleware.FridayCredentialProbePinMiddleware())
+--- a/internal/api/handlers/management/handler.go
++++ b/internal/api/handlers/management/handler.go
+@@ -270,0 +271,2 @@
++		c.Header("X-FRIDAY-CPA-EVIDENCE-CONTRACT", "cpa-basic@1")
++		c.Header("X-FRIDAY-CPA-ADAPTATION", "friday-evidence-v1")
+--- a/internal/logging/gin_logger.go
++++ b/internal/logging/gin_logger.go
+@@ -124,0 +125,2 @@
++		// The recovered value may contain Provider or credential material. Keep
++		// only the stack shape and route; Go stacks do not serialize local values.
+@@ -126 +127,0 @@
+-			"panic": recovered,
+@@ -129 +130 @@
+-		}).Error("recovered from panic")
++		}).Error("recovered from request panic")
+--- a/internal/api/handlers/management/auth_files.go
++++ b/internal/api/handlers/management/auth_files.go
+@@ -334,0 +335 @@ func (h *Handler) buildAuthFileEntryLocked(auth *coreauth.Auth) gin.H {
++		"prefix":         strings.TrimSpace(authAttribute(auth, "prefix")),
+@@ -339,0 +341 @@ func (h *Handler) buildAuthFileEntryLocked(auth *coreauth.Auth) gin.H {
++		"failure_reason": safeAuthFailureReason(auth, time.Now()),
+@@ -439,0 +442,41 @@ func (h *Handler) buildAuthFileEntryLocked(auth *coreauth.Auth) gin.H {
++func safeAuthFailureReason(auth *coreauth.Auth, now time.Time) string {
++	if auth == nil {
++		return ""
++	}
++	unauthorized := false
++	unavailable := auth.Unavailable
++	cooldown := (auth.Quota.Exceeded && auth.Quota.NextRecoverAt.After(now)) || auth.NextRetryAfter.After(now)
++	inspect := func(err *coreauth.Error) {
++		if err == nil {
++			return
++		}
++		switch strings.ToLower(strings.TrimSpace(err.Code)) {
++		case "auth_unauthorized":
++			unauthorized = true
++		case "auth_unavailable":
++			unavailable = true
++		case "model_cooldown":
++			cooldown = true
++		}
++	}
++	inspect(auth.LastError)
++	for _, state := range auth.ModelStates {
++		if state == nil {
++			continue
++		}
++		inspect(state.LastError)
++		unavailable = unavailable || state.Unavailable
++		cooldown = cooldown || (state.Quota.Exceeded && state.Quota.NextRecoverAt.After(now)) || state.NextRetryAfter.After(now)
++	}
++	if unauthorized {
++		return "auth_unauthorized"
++	}
++	if cooldown {
++		return "model_cooldown"
++	}
++	if unavailable {
++		return "auth_unavailable"
++	}
++	return ""
++}
++
+--- a/sdk/api/handlers/handlers_execution.go
++++ b/sdk/api/handlers/handlers_execution.go
+@@ -3,0 +4 @@ import (
++	"encoding/json"
+@@ -6,0 +8 @@ import (
++	"strings"
+@@ -10,0 +13 @@ import (
++	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+@@ -338 +341,46 @@ func executionErrorMessage(err error) *interfaces.ErrorMessage {
+-	return &interfaces.ErrorMessage{StatusCode: status, Error: err, Addon: addon}
++	return &interfaces.ErrorMessage{StatusCode: status, Error: safeAuthResponseError(err), Addon: addon}
++}
++
++type authResponseError struct {
++	cause   error
++	payload string
++}
++
++func (e *authResponseError) Error() string { return e.payload }
++func (e *authResponseError) Unwrap() error { return e.cause }
++
++func safeAuthResponseError(err error) error {
++	var authErr *coreauth.Error
++	code := ""
++	if errors.As(err, &authErr) && authErr != nil {
++		code = strings.ToLower(strings.TrimSpace(authErr.Code))
++	}
++	if code == "" && clienterror.HTTPStatusFromError(err) == http.StatusUnauthorized {
++		code = "auth_unauthorized"
++	}
++	message := ""
++	switch code {
++	case "auth_unauthorized":
++		message = "provider credential is unauthorized"
++	case "auth_unavailable":
++		message = "provider credential is temporarily unavailable"
++	case "auth_not_found":
++		message = "provider credential was not found"
++	case "model_cooldown":
++		message = "provider credential is cooling down"
++	default:
++		return err
++	}
++	errType := "server_error"
++	if code == "auth_unauthorized" {
++		errType = "authentication_error"
++	}
++	payload, marshalErr := json.Marshal(ErrorResponse{Error: ErrorDetail{
++		Message: message,
++		Type:    errType,
++		Code:    code,
++	}})
++	if marshalErr != nil {
++		return err
++	}
++	return &authResponseError{cause: err, payload: string(payload)}
+--- a/sdk/api/handlers/handlers_stream_bootstrap_test.go
++++ b/sdk/api/handlers/handlers_stream_bootstrap_test.go
+@@ -926,2 +926,2 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
+-	if gotErr.StatusCode != http.StatusServiceUnavailable {
+-		t.Fatalf("status = %d, want %d", gotErr.StatusCode, http.StatusServiceUnavailable)
++	if gotErr.StatusCode != http.StatusUnauthorized {
++		t.Fatalf("status = %d, want %d", gotErr.StatusCode, http.StatusUnauthorized)
+@@ -934,2 +934,2 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
+-	if authErr.Code != "auth_unavailable" {
+-		t.Fatalf("code = %q, want %q", authErr.Code, "auth_unavailable")
++	if authErr.Code != "auth_unauthorized" {
++		t.Fatalf("code = %q, want %q", authErr.Code, "auth_unauthorized")
+@@ -937,2 +937,2 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
+-	if !strings.Contains(authErr.Message, "providers=codex") {
+-		t.Fatalf("message missing provider context: %q", authErr.Message)
++	if authErr.Message != "provider credential is unauthorized" {
++		t.Fatalf("message = %q", authErr.Message)
+@@ -940,4 +939,0 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
+-	if !strings.Contains(authErr.Message, "model=test-model") {
+-		t.Fatalf("message missing model context: %q", authErr.Message)
+-	}
+-
+--- a/sdk/cliproxy/auth/conductor_cooldown.go
++++ b/sdk/cliproxy/auth/conductor_cooldown.go
+@@ -1329,0 +1330,5 @@ func resultErrorFromError(err error) *Error {
++	if resultErr.HTTPStatus == http.StatusUnauthorized && !strings.EqualFold(resultErr.Code, "legacy_unauthorized") {
++		resultErr.Code = "auth_unauthorized"
++		resultErr.Message = "provider credential is unauthorized"
++		resultErr.Retryable = false
++	}
+@@ -1344,0 +1350,11 @@ func resultErrorFromError(err error) *Error {
++func credentialFailureError(err error) error {
++	if err == nil {
++		return nil
++	}
++	classified := resultErrorFromError(err)
++	if classified != nil && classified.Code == "auth_unauthorized" {
++		return classified
++	}
++	return err
++}
++
+@@ -1432 +1448 @@ func hasUnauthorizedAuthFailure(auth *Auth) bool {
+-	return auth.LastError.StatusCode() == http.StatusUnauthorized || strings.EqualFold(auth.LastError.Code, "unauthorized")
++	return auth.LastError.StatusCode() == http.StatusUnauthorized || strings.EqualFold(auth.LastError.Code, "auth_unauthorized") || strings.EqualFold(auth.LastError.Code, "unauthorized") || strings.EqualFold(auth.LastError.Code, "legacy_unauthorized")
+@@ -1439,0 +1456 @@ func refreshErrorFromError(err error) *Error {
++	structuredUnauthorized := statusCode == http.StatusUnauthorized
+@@ -1444 +1461,7 @@ func refreshErrorFromError(err error) *Error {
+-	if statusCode == http.StatusUnauthorized {
++	if structuredUnauthorized {
++		authErr.Code = "auth_unauthorized"
++		authErr.Message = "provider credential is unauthorized"
++		authErr.Retryable = false
++	} else if statusCode == http.StatusUnauthorized {
++		// Legacy refresh implementations may expose only text. Preserve their
++		// retry behavior without promoting message matching into the typed reason.
+@@ -1447,0 +1471,3 @@ func refreshErrorFromError(err error) *Error {
++	if !structuredUnauthorized && statusCode == http.StatusUnauthorized {
++		authErr.Code = "legacy_unauthorized"
++	}
+--- a/sdk/cliproxy/auth/conductor_execution.go
++++ b/sdk/cliproxy/auth/conductor_execution.go
+@@ -53 +53 @@ func (m *Manager) Execute(ctx context.Context, providers []string, req cliproxye
+-		return resp, unwrapRequestStopError(errHome)
++		return resp, credentialFailureError(unwrapRequestStopError(errHome))
+@@ -86 +86 @@ func (m *Manager) Execute(ctx context.Context, providers []string, req cliproxye
+-		return cliproxyexecutor.Response{}, lastErr
++		return cliproxyexecutor.Response{}, credentialFailureError(lastErr)
+@@ -100 +100 @@ func (m *Manager) ExecuteCount(ctx context.Context, providers []string, req clip
+-		return resp, unwrapRequestStopError(errHome)
++		return resp, credentialFailureError(unwrapRequestStopError(errHome))
+@@ -125 +125 @@ func (m *Manager) ExecuteCount(ctx context.Context, providers []string, req clip
+-		return cliproxyexecutor.Response{}, unwrapRequestStopError(lastErr)
++		return cliproxyexecutor.Response{}, credentialFailureError(unwrapRequestStopError(lastErr))
+@@ -199 +199 @@ func (m *Manager) ExecuteStream(ctx context.Context, providers []string, req cli
+-		return nil, lastErr
++		return nil, credentialFailureError(lastErr)
+--- a/sdk/cliproxy/auth/conductor_home.go
++++ b/sdk/cliproxy/auth/conductor_home.go
+@@ -292 +292 @@ func shouldReturnLastErrorOnPickFailure(homeMode bool, lastErr error, errPick er
+-	case "auth_not_found", "auth_unavailable":
++	case "auth_not_found", "auth_unavailable", "auth_unauthorized":
+--- a/sdk/cliproxy/auth/scheduler.go
++++ b/sdk/cliproxy/auth/scheduler.go
+@@ -4,0 +5 @@ import (
++	"net/http"
+@@ -454,0 +456 @@ func (s *authScheduler) mixedUnavailableErrorLocked(providers []string, model st
++	unauthorizedCount := 0
+@@ -466 +468 @@ func (s *authScheduler) mixedUnavailableErrorLocked(providers []string, model st
+-		localTotal, localCooldownCount, localEarliest := shard.availabilitySummaryLocked(predicate)
++		localTotal, localUnauthorizedCount, localCooldownCount, localEarliest := shard.availabilitySummaryLocked(predicate)
+@@ -467,0 +470 @@ func (s *authScheduler) mixedUnavailableErrorLocked(providers []string, model st
++		unauthorizedCount += localUnauthorizedCount
+@@ -475,0 +479,3 @@ func (s *authScheduler) mixedUnavailableErrorLocked(providers []string, model st
++	if unauthorizedCount == total {
++		return &Error{Code: "auth_unauthorized", Message: "provider credential is unauthorized", HTTPStatus: http.StatusUnauthorized}
++	}
+@@ -878 +884 @@ func (m *modelScheduler) unavailableErrorLocked(provider, model string, predicat
+-	total, cooldownCount, earliest := m.availabilitySummaryLocked(predicate)
++	total, unauthorizedCount, cooldownCount, earliest := m.availabilitySummaryLocked(predicate)
+@@ -881,0 +888,3 @@ func (m *modelScheduler) unavailableErrorLocked(provider, model string, predicat
++	if unauthorizedCount == total {
++		return &Error{Code: "auth_unauthorized", Message: "provider credential is unauthorized", HTTPStatus: http.StatusUnauthorized}
++	}
+@@ -897 +906 @@ func (m *modelScheduler) unavailableErrorLocked(provider, model string, predicat
+-func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth) bool) (int, int, time.Time) {
++func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth) bool) (int, int, int, time.Time) {
+@@ -899 +908 @@ func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth
+-		return 0, 0, time.Time{}
++		return 0, 0, 0, time.Time{}
+@@ -901,0 +911 @@ func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth
++	unauthorizedCount := 0
+@@ -911,0 +922,3 @@ func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth
++		if authFailureCodeForModel(entry.auth, m.modelKey) == "auth_unauthorized" {
++			unauthorizedCount++
++		}
+@@ -920 +933,20 @@ func (m *modelScheduler) availabilitySummaryLocked(predicate func(*scheduledAuth
+-	return total, cooldownCount, earliest
++	return total, unauthorizedCount, cooldownCount, earliest
++}
++
++func authFailureCodeForModel(auth *Auth, model string) string {
++	if auth == nil {
++		return ""
++	}
++	modelKey := canonicalModelKey(model)
++	for stateModel, state := range auth.ModelStates {
++		if state == nil || canonicalModelKey(stateModel) != modelKey || state.LastError == nil {
++			continue
++		}
++		if code := strings.ToLower(strings.TrimSpace(state.LastError.Code)); code != "" {
++			return code
++		}
++	}
++	if auth.LastError != nil {
++		return strings.ToLower(strings.TrimSpace(auth.LastError.Code))
++	}
++	return ""
+--- a/sdk/cliproxy/auth/conductor_scheduler_refresh_test.go
++++ b/sdk/cliproxy/auth/conductor_scheduler_refresh_test.go
+@@ -78,2 +78,2 @@
+-	if updated.LastError.Code != "unauthorized" {
+-		t.Fatalf("LastError.Code = %q, want unauthorized", updated.LastError.Code)
++	if updated.LastError.Code != "legacy_unauthorized" {
++		t.Fatalf("LastError.Code = %q, want legacy_unauthorized", updated.LastError.Code)

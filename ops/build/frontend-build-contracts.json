@@ -1,0 +1,1332 @@
+{
+  "schema": "frontend-build-contracts.v1",
+  "workspaceRoot": "../..",
+  "applicationRoots": [
+    "apps/admin",
+    "apps/cliproxy-control",
+    "apps/cliproxy-egress",
+    "apps/gateway",
+    "apps/hub",
+    "apps/web"
+  ],
+  "apps": [
+    {
+      "id": "admin",
+      "root": "apps/admin",
+      "packageJson": "apps/admin/package.json",
+      "policyFiles": [
+        "apps/admin/vite.config.mts",
+        "Dockerfile",
+        "docker-compose.yml"
+      ],
+      "workspacePackages": [
+        {
+          "name": "@frely/authority",
+          "root": "packages/authority",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/billing",
+          "root": "packages/billing",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/entitlement",
+          "root": "packages/entitlement",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/auth",
+          "root": "packages/auth",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./password-policy",
+              "path": "src/password-policy.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/config",
+          "root": "packages/config",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./workspace",
+              "path": "src/workspace.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/console-ui",
+          "root": "packages/console-ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./client",
+              "path": "src/client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./models",
+              "path": "src/models.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./messages",
+              "path": "src/messages.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./search-select",
+              "path": "src/search-select.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./access-point-description",
+              "path": "src/access-point-description.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./portal-menu",
+              "path": "src/portal-menu.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./console-dialog",
+              "path": "src/console-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-capture-dialog",
+              "path": "src/request-capture-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./pipeline-plugin-chips",
+              "path": "src/pipeline-plugin-chips.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-log-filters",
+              "path": "src/request-log-filters.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-history-table",
+              "path": "src/request-history-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./query-client",
+              "path": "src/query-client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./unauthorized-response",
+              "path": "src/unauthorized-response.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./session-recovery-dialog",
+              "path": "src/session-recovery-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./data-table",
+              "path": "src/data-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./material-table",
+              "path": "src/material-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./material-table-pagination",
+              "path": "src/material-table-pagination.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./pagination",
+              "path": "src/pagination.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./styles.css",
+              "path": "src/styles.css",
+              "surface": "shared"
+            },
+            {
+              "export": "./api-error",
+              "path": "src/api-error.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./credit-topup",
+              "path": "src/credit-topup.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./plan-budget",
+              "path": "src/plan-budget.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./sign-out-button",
+              "path": "src/sign-out-button.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./password-change",
+              "path": "src/password-change.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./api-key-plan-source-restriction",
+              "path": "src/api-key-plan-source-restriction.tsx",
+              "surface": "client"
+            }
+          ]
+        },
+        {
+          "name": "@frely/core",
+          "root": "packages/core",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/gateway-core",
+          "root": "packages/gateway",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/model-access",
+          "root": "packages/model-access",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./types",
+              "path": "src/types.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./routing-runtime",
+              "path": "src/routing-runtime.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/observability",
+          "root": "packages/observability",
+          "classification": "hybrid",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./client-runtime",
+              "path": "src/client-runtime.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./contracts",
+              "path": "src/contracts.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./instrumentation",
+              "path": "src/instrumentation.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./generated-dialog-registry",
+              "path": "src/generated-dialog-registry.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./gateway-metrics",
+              "path": "src/gateway-metrics.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/pricing",
+          "root": "packages/pricing",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/providers",
+          "root": "packages/providers",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./credentials",
+              "path": "src/provider-credentials.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/team-console-ui",
+          "root": "packages/team-console-ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./client",
+              "path": "src/client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./models",
+              "path": "src/models.ts",
+              "surface": "shared"
+            }
+          ]
+        },
+        {
+          "name": "@frely/application",
+          "root": "packages/application",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./runtime",
+              "path": "src/storage/runtime.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./internal/verification",
+              "path": "src/internal-verification.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./internal/operations",
+              "path": "src/internal-operations.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/ui-application",
+          "root": "packages/ui-application",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": "./contracts",
+              "path": "src/contracts.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/tenancy",
+          "root": "packages/tenancy",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./audience-server",
+              "path": "src/audience-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/ui",
+          "root": "packages/ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./styles.css",
+              "path": "src/styles/globals.css",
+              "surface": "shared"
+            }
+          ]
+        },
+        {
+          "name": "@frely/audit",
+          "root": "packages/audit",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/identity",
+          "root": "packages/identity",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        }
+      ],
+      "memory": {
+        "containerLimitMiB": 4096,
+        "baselineHeapLimitMiB": 640,
+        "coldPath": "apps/admin/.output"
+      },
+      "runtime": {
+        "containerPort": 43002,
+        "command": [
+          "bun",
+          "serve.mjs"
+        ],
+        "readyPath": "/api/health",
+        "readyStatuses": [
+          200
+        ],
+        "routes": [
+          {
+            "path": "/__runtime-contract-not-found",
+            "statuses": [
+              404
+            ]
+          }
+        ],
+        "routeTimeoutMs": 15000,
+        "startupTimeoutMs": 30000
+      },
+      "framework": "tanstack-start",
+      "sourcePrerequisites": {
+        "requiredPaths": [
+          "apps/admin/src",
+          "apps/admin/src/routes",
+          "apps/admin/src/routeTree.gen.ts",
+          "apps/admin/vite.config.mts"
+        ],
+        "forbiddenPaths": [
+          "apps/admin/app",
+          "apps/admin/next.config.mjs",
+          "apps/admin/next-env.d.ts"
+        ]
+      },
+      "frameworkConfig": {
+        "path": "apps/admin/vite.config.mts",
+        "requiredRuntimePackages": [
+          "@tanstack/react-router",
+          "@tanstack/react-start",
+          "srvx"
+        ],
+        "requiredBuildPackages": [
+          "@tanstack/router-plugin",
+          "@vitejs/plugin-react",
+          "vite"
+        ],
+        "forbiddenPackages": [
+          "next"
+        ]
+      },
+      "surface": {
+        "kind": "tanstack-file-routes",
+        "sourceRoot": "apps/admin/src/routes",
+        "registry": "apps/admin/src/telemetry/generated-route-registry.ts",
+        "generatedRouteTree": "apps/admin/src/routeTree.gen.ts",
+        "buildManifest": "apps/admin/.output/raw/client/.vite/manifest.json",
+        "excludePrefixes": [
+          "/api/"
+        ]
+      },
+      "build": {
+        "command": [
+          "bun",
+          "run",
+          "--filter",
+          "@frely/admin",
+          "build:framework"
+        ],
+        "rawRoot": "apps/admin/.output/raw",
+        "rawRootEnv": "FRIDAY_RELAY_ADMIN_BUILD_OUT_DIR",
+        "artifactRoot": "apps/admin/.output/runtime"
+      },
+      "artifact": {
+        "kind": "tanstack-start-filtered",
+        "root": "apps/admin/.output/runtime",
+        "sourceRoot": "apps/admin/.output/raw",
+        "serverRoot": "server",
+        "clientRoot": "client",
+        "sourceServerEntry": "server/server.js",
+        "entrypoints": [
+          "serve.mjs",
+          "server/server.js"
+        ],
+        "launcherSource": "scripts/tanstack-start-runtime-serve.mjs",
+        "requiredPackages": [],
+        "forbiddenPackages": [
+          "@tanstack/router-generator",
+          "@tanstack/router-plugin",
+          "@tanstack/start-plugin-core",
+          "@vitejs/plugin-react",
+          "next",
+          "typescript",
+          "vite"
+        ],
+        "forbiddenFingerprints": [
+          "@tanstack/react-start/plugin/vite",
+          "@tanstack/router-plugin",
+          "@tanstack/start-plugin-core",
+          "@vitejs/plugin-react",
+          "This module cannot be imported from a Client Component module.",
+          "next/dist/",
+          "vite/dist/node"
+        ],
+        "runtimeIncludes": [
+          {
+            "source": "packages/postgres/prisma",
+            "destination": "server/prisma"
+          }
+        ]
+      },
+      "bundle": {
+        "kind": "vite-manifest",
+        "manifest": "apps/admin/.output/raw/client/.vite/manifest.json",
+        "assetsRoot": "apps/admin/.output/raw/client"
+      }
+    },
+    {
+      "id": "web",
+      "root": "apps/web",
+      "packageJson": "apps/web/package.json",
+      "policyFiles": [
+        "apps/web/vite.config.mts",
+        "Dockerfile",
+        "docker-compose.yml"
+      ],
+      "workspacePackages": [
+        {
+          "name": "@frely/authority",
+          "root": "packages/authority",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/billing",
+          "root": "packages/billing",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/entitlement",
+          "root": "packages/entitlement",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/auth",
+          "root": "packages/auth",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./password-policy",
+              "path": "src/password-policy.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/config",
+          "root": "packages/config",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./workspace",
+              "path": "src/workspace.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/console-ui",
+          "root": "packages/console-ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./client",
+              "path": "src/client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./models",
+              "path": "src/models.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./messages",
+              "path": "src/messages.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./search-select",
+              "path": "src/search-select.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./access-point-description",
+              "path": "src/access-point-description.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./portal-menu",
+              "path": "src/portal-menu.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./console-dialog",
+              "path": "src/console-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-capture-dialog",
+              "path": "src/request-capture-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./pipeline-plugin-chips",
+              "path": "src/pipeline-plugin-chips.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-log-filters",
+              "path": "src/request-log-filters.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./request-history-table",
+              "path": "src/request-history-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./query-client",
+              "path": "src/query-client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./unauthorized-response",
+              "path": "src/unauthorized-response.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./session-recovery-dialog",
+              "path": "src/session-recovery-dialog.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./data-table",
+              "path": "src/data-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./material-table",
+              "path": "src/material-table.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./material-table-pagination",
+              "path": "src/material-table-pagination.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./pagination",
+              "path": "src/pagination.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./styles.css",
+              "path": "src/styles.css",
+              "surface": "shared"
+            },
+            {
+              "export": "./api-error",
+              "path": "src/api-error.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./credit-topup",
+              "path": "src/credit-topup.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./plan-budget",
+              "path": "src/plan-budget.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./sign-out-button",
+              "path": "src/sign-out-button.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./password-change",
+              "path": "src/password-change.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./api-key-plan-source-restriction",
+              "path": "src/api-key-plan-source-restriction.tsx",
+              "surface": "client"
+            }
+          ]
+        },
+        {
+          "name": "@frely/core",
+          "root": "packages/core",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/gateway-core",
+          "root": "packages/gateway",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/model-access",
+          "root": "packages/model-access",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./types",
+              "path": "src/types.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./routing-runtime",
+              "path": "src/routing-runtime.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/observability",
+          "root": "packages/observability",
+          "classification": "hybrid",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./client-runtime",
+              "path": "src/client-runtime.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./contracts",
+              "path": "src/contracts.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./instrumentation",
+              "path": "src/instrumentation.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./generated-dialog-registry",
+              "path": "src/generated-dialog-registry.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./gateway-metrics",
+              "path": "src/gateway-metrics.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/pricing",
+          "root": "packages/pricing",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/providers",
+          "root": "packages/providers",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./credentials",
+              "path": "src/provider-credentials.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/team-console-ui",
+          "root": "packages/team-console-ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.tsx",
+              "surface": "client"
+            },
+            {
+              "export": "./client",
+              "path": "src/client.ts",
+              "surface": "client"
+            },
+            {
+              "export": "./models",
+              "path": "src/models.ts",
+              "surface": "shared"
+            }
+          ]
+        },
+        {
+          "name": "@frely/application",
+          "root": "packages/application",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./runtime",
+              "path": "src/storage/runtime.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./internal/verification",
+              "path": "src/internal-verification.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./internal/operations",
+              "path": "src/internal-operations.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/ui-application",
+          "root": "packages/ui-application",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": "./contracts",
+              "path": "src/contracts.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/tenancy",
+          "root": "packages/tenancy",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./audience-server",
+              "path": "src/audience-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/server.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/ui",
+          "root": "packages/ui",
+          "classification": "client",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "shared"
+            },
+            {
+              "export": "./styles.css",
+              "path": "src/styles/globals.css",
+              "surface": "shared"
+            }
+          ]
+        },
+        {
+          "name": "@frely/audit",
+          "root": "packages/audit",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        },
+        {
+          "name": "@frely/identity",
+          "root": "packages/identity",
+          "classification": "server",
+          "entrypoints": [
+            {
+              "export": ".",
+              "path": "src/index.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./server",
+              "path": "src/public-server.ts",
+              "surface": "server"
+            },
+            {
+              "export": "./application-internal",
+              "path": "src/application-internal.ts",
+              "surface": "server"
+            }
+          ]
+        }
+      ],
+      "memory": {
+        "containerLimitMiB": 6144,
+        "baselineHeapLimitMiB": 768,
+        "heapLimitMiB": 768,
+        "coldPath": "apps/web/.output"
+      },
+      "runtime": {
+        "containerPort": 43001,
+        "command": [
+          "bun",
+          "serve.mjs"
+        ],
+        "readyPath": "/api/health",
+        "readyStatuses": [
+          200
+        ],
+        "routes": [
+          {
+            "path": "/__runtime-contract-not-found",
+            "statuses": [
+              404
+            ]
+          }
+        ],
+        "routeTimeoutMs": 15000,
+        "startupTimeoutMs": 30000
+      },
+      "framework": "tanstack-start",
+      "sourcePrerequisites": {
+        "requiredPaths": [
+          "apps/web/src",
+          "apps/web/src/routes",
+          "apps/web/src/routeTree.gen.ts",
+          "apps/web/vite.config.mts"
+        ],
+        "forbiddenPaths": [
+          "apps/web/app",
+          "apps/web/next.config.mjs",
+          "apps/web/next-env.d.ts"
+        ]
+      },
+      "frameworkConfig": {
+        "path": "apps/web/vite.config.mts",
+        "requiredRuntimePackages": [
+          "@tanstack/react-router",
+          "@tanstack/react-start",
+          "srvx",
+          "undici"
+        ],
+        "requiredBuildPackages": [
+          "@tanstack/router-plugin",
+          "@vitejs/plugin-react",
+          "vite"
+        ],
+        "forbiddenPackages": [
+          "next"
+        ]
+      },
+      "surface": {
+        "kind": "tanstack-file-routes",
+        "sourceRoot": "apps/web/src/routes",
+        "registry": "apps/web/src/telemetry/generated-route-registry.ts",
+        "generatedRouteTree": "apps/web/src/routeTree.gen.ts",
+        "buildManifest": "apps/web/.output/raw/client/.vite/manifest.json",
+        "excludePrefixes": [
+          "/api/",
+          "/auth/",
+          "/oidc/",
+          "/activate/",
+          "/.well-known/"
+        ]
+      },
+      "build": {
+        "command": [
+          "bun",
+          "run",
+          "--filter",
+          "@frely/web",
+          "build:framework"
+        ],
+        "rawRoot": "apps/web/.output/raw",
+        "rawRootEnv": "FRIDAY_RELAY_WEB_BUILD_OUT_DIR",
+        "artifactRoot": "apps/web/.output/runtime"
+      },
+      "artifact": {
+        "kind": "tanstack-start-filtered",
+        "root": "apps/web/.output/runtime",
+        "sourceRoot": "apps/web/.output/raw",
+        "serverRoot": "server",
+        "clientRoot": "client",
+        "sourceServerEntry": "server/server.js",
+        "entrypoints": [
+          "serve.mjs",
+          "server/server.js"
+        ],
+        "launcherSource": "scripts/tanstack-start-runtime-serve.mjs",
+        "requiredPackages": [],
+        "forbiddenPackages": [
+          "@tanstack/router-generator",
+          "@tanstack/router-plugin",
+          "@tanstack/start-plugin-core",
+          "@vitejs/plugin-react",
+          "next",
+          "typescript",
+          "vite"
+        ],
+        "forbiddenFingerprints": [
+          "@tanstack/react-start/plugin/vite",
+          "@tanstack/router-plugin",
+          "@tanstack/start-plugin-core",
+          "@vitejs/plugin-react",
+          "This module cannot be imported from a Client Component module.",
+          "next/dist/",
+          "vite/dist/node"
+        ],
+        "runtimeIncludes": [
+          {
+            "source": "packages/postgres/prisma",
+            "destination": "server/prisma"
+          }
+        ]
+      },
+      "bundle": {
+        "kind": "vite-manifest",
+        "manifest": "apps/web/.output/raw/client/.vite/manifest.json",
+        "assetsRoot": "apps/web/.output/raw/client"
+      }
+    }
+  ]
+}

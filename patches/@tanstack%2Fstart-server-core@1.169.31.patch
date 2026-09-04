@@ -1,0 +1,94 @@
+diff --git a/dist/esm/server-functions-handler.js b/dist/esm/server-functions-handler.js
+index c493774211d1ea4b966e9fcd437e3e833d8f932e..cf5c504530841286681241097e4a662bea16d6b6 100644
+--- a/dist/esm/server-functions-handler.js
++++ b/dist/esm/server-functions-handler.js
+@@ -3,7 +3,7 @@ import { getServerFnById } from "./getServerFnById.js";
+ import { TSS_CONTENT_TYPE_FRAMED_VERSIONED, createMultiplexedStream } from "./frame-protocol.js";
+ import { TSS_FORMDATA_CONTEXT, X_TSS_RAW_RESPONSE, X_TSS_SERIALIZED, getDefaultSerovalPlugins, safeObjectMerge } from "@tanstack/start-client-core";
+ import { createRawStreamRPCPlugin, invariant, isNotFound, isRedirect } from "@tanstack/router-core";
+-import { fromJSON, toCrossJSONAsync, toCrossJSONStream } from "seroval";
++import { fromJSON, toCrossJSONStream } from "seroval";
+ //#region src/server-functions-handler.ts
+ var serovalPlugins = void 0;
+ var FORM_DATA_CONTENT_TYPES = ["multipart/form-data", "application/x-www-form-urlencoded"];
+@@ -179,23 +179,12 @@ var handleServerAction = async ({ request, context, serverFnId }) => {
+ 		} catch (error) {
+ 			if (error instanceof Response) return error;
+ 			if (isNotFound(error)) return isNotFoundResponse(error);
+-			console.info();
+-			console.info("Server Fn Error!");
+-			console.info();
+-			console.error(error);
+-			console.info();
+-			const serializedError = JSON.stringify(await Promise.resolve(toCrossJSONAsync(error, {
+-				refs: /* @__PURE__ */ new Map(),
+-				plugins: serovalPlugins
+-			})));
++			const isAlreadySanitized = error !== null && typeof error === "object" && error.code === "internal_server_error" && Object.keys(error).length === 1;
++			if (!isAlreadySanitized) process.stdout.write(`${JSON.stringify({ event: "admin.server_function.failed", code: "internal_server_error" })}\n`);
+ 			const response = getResponse();
+-			return new Response(serializedError, {
++			return Response.json({ error: { code: "internal_server_error" } }, {
+ 				status: response.status ?? 500,
+-				statusText: response.statusText,
+-				headers: {
+-					"Content-Type": "application/json",
+-					[X_TSS_SERIALIZED]: "true"
+-				}
++				statusText: response.statusText
+ 			});
+ 		}
+ 	})();
+diff --git a/src/server-functions-handler.ts b/src/server-functions-handler.ts
+index e7d961decf15f281d5ee3f2ab015dead1e365ed0..ff96d2e1ac2a7ac1e9f9bf1bdc2a8a8f5a3c5f44 100644
+--- a/src/server-functions-handler.ts
++++ b/src/server-functions-handler.ts
+@@ -11,7 +11,7 @@ import {
+   getDefaultSerovalPlugins,
+   safeObjectMerge,
+ } from '@tanstack/start-client-core'
+-import { fromJSON, toCrossJSONAsync, toCrossJSONStream } from 'seroval'
++import { fromJSON, toCrossJSONStream } from 'seroval'
+ import { getResponse } from './request-response'
+ import { getServerFnById } from './getServerFnById'
+ import {
+@@ -389,28 +389,20 @@ export const handleServerAction = async ({
+         return isNotFoundResponse(error)
+       }
+ 
+-      console.info()
+-      console.info('Server Fn Error!')
+-      console.info()
+-      console.error(error)
+-      console.info()
+-
+-      const serializedError = JSON.stringify(
+-        await Promise.resolve(
+-          toCrossJSONAsync(error, {
+-            refs: new Map(),
+-            plugins: serovalPlugins,
+-          }),
+-        ),
+-      )
++      const isAlreadySanitized =
++        error !== null &&
++        typeof error === 'object' &&
++        error.code === 'internal_server_error' &&
++        Object.keys(error).length === 1
++      if (!isAlreadySanitized) {
++        process.stdout.write(
++          `${JSON.stringify({ event: 'admin.server_function.failed', code: 'internal_server_error' })}\n`,
++        )
++      }
+       const response = getResponse()
+-      return new Response(serializedError, {
++      return Response.json({ error: { code: 'internal_server_error' } }, {
+         status: response.status ?? 500,
+         statusText: response.statusText,
+-        headers: {
+-          'Content-Type': 'application/json',
+-          [X_TSS_SERIALIZED]: 'true',
+-        },
+       })
+     }
+   })()

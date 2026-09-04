@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "../.."
+  },
+  "include": [
+    "verification/identity-tenancy-verification.ts",
+    "../application/verification/identity-tenancy-offline.ts",
+    "src/postgres-verification-runtime.ts"
+  ],
+  "exclude": []
+}

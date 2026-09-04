@@ -1,0 +1,44 @@
+{
+  "name": "@frely/tenancy",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./audience-server": {
+      "types": "./dist/audience-server.d.ts",
+      "import": "./dist/audience-server.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "access-point-scope:verify": "bun src/access-point-scope-verification.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.9.0",
+    "@frely/audit": "workspace:*",
+    "@frely/authority": "workspace:*",
+    "@frely/auth": "workspace:*",
+    "@frely/config": "workspace:*",
+    "@frely/capture": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/identity": "workspace:*",
+    "@frely/postgres": "workspace:*",
+    "@frely/tenancy-context": "workspace:*",
+    "server-only": "0.0.1",
+    "@frely/application": "workspace:*"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

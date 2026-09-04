@@ -1,0 +1,38 @@
+apiVersion: friday-relay.observability/v1
+kind: SigNozAlertCatalog
+alerts:
+  - name: admin-teams-page-p95-startup-threshold
+    signal: ui_surface_open_duration_ms
+    filter:
+      service: admin
+      surface_type: page
+      surface_name: /owner/teams
+      result: success
+    aggregate: p95
+    thresholdMs: 2000
+    minimumSamples: 20
+    evaluationWindow: 10m
+    pendingDuration: 10m
+    status: startup-threshold
+  - name: admin-teams-page-timeout-ratio
+    signal: ui_surface_open_duration_ms
+    filter:
+      service: admin
+      surface_type: page
+      surface_name: /owner/teams
+    numeratorResult: timeout
+    aggregate: ratio
+    threshold: 0.02
+    minimumSamples: 20
+    evaluationWindow: 10m
+  - name: repository-page-boundary-violation
+    signal: friday.repository.operation
+    filter:
+      operation: queries.teams.pageDirectory
+    condition: db.response.returned_rows > friday.collection.page_size
+    evaluationWindow: 5m
+  - name: telemetry-data-gap
+    signal: ui_surface_open_duration_ms
+    aggregate: count
+    condition: no-data
+    evaluationWindow: 30m

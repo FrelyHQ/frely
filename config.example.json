@@ -1,0 +1,84 @@
+{
+  "app": {
+    "name": "Frely",
+    "environment": "development",
+    "publicBaseUrl": "http://localhost:43001",
+    "reservedHostnames": []
+  },
+  "database": {
+    "backend": "postgres"
+  },
+  "archive": {
+    "directory": "./archives",
+    "coldDirectory": "./archives-cold",
+    "requireColdMount": false,
+    "history": {
+      "enabled": false,
+      "autoPurge": false,
+      "hotDays": 180,
+      "purgeBatchSize": 200
+    }
+  },
+  "requestCapture": {
+    "hotDays": 90,
+    "archive": {
+      "enabled": false,
+      "autoPurge": false,
+      "purgeBatchSize": 200,
+      "zstdLevel": 6,
+      "frameUncompressedBytes": 67108864
+    },
+    "download": {
+      "maxFiles": 10000,
+      "maxCompressedBytes": 1073741824
+    }
+  },
+  "requestExecution": {
+    "leaseTtlSeconds": 1800
+  },
+  "security": {
+    "abuseRateLimit": {}
+  },
+  "auth": {
+    "accessTokenTtlSeconds": 900,
+    "refreshTokenTtlSeconds": 2592000,
+    "jwtSecret": "replace-with-review-secret",
+    "cookieSecure": false,
+    "passkey": {
+      "enabled": false
+    }
+  },
+  "oidc": {
+    "enabled": false
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 43001
+  },
+  "admin": {
+    "host": "127.0.0.1",
+    "port": 43002
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 43000,
+    "maxRequestBodyBytes": 33554432,
+    "ingressRouteAttestationMode": "observe"
+  },
+  "piTunnel": {
+    "enabled": false
+  },
+  "providers": [],
+  "logging": {
+    "level": "info",
+    "redactKeys": [
+      "authorization",
+      "apiKey",
+      "password"
+    ]
+  },
+  "bootstrap": {
+    "enabled": true,
+    "ownerEmail": "owner@example.com"
+  }
+}

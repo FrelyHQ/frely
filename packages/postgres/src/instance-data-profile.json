@@ -1,0 +1,218 @@
+{
+  "schema": "friday-relay.instance-data-profile.v2",
+  "profileId": "core-llm",
+  "version": 2,
+  "selection": "table-type",
+  "rowSelection": "whole-table",
+  "capabilities": {
+    "llm": true,
+    "prepaid": true,
+    "paygo": false,
+    "userSessions": false,
+    "capture": false
+  },
+  "requiredTablesByCategory": {
+    "identity": [
+      "user_controls",
+      "user",
+      "api_keys"
+    ],
+    "tenancy": [
+      "teams",
+      "team_memberships",
+      "team_invite_links"
+    ],
+    "routing": [
+      "cpa_instances",
+      "providers",
+      "provider_models",
+      "provider_bindings",
+      "access_points",
+      "access_point_targets"
+    ],
+    "entitlement": [
+      "plans",
+      "plan_subscriptions",
+      "plan_access_points",
+      "plan_access_point_prices",
+      "plan_access_point_price_tiers",
+      "plan_budget_limits",
+      "user_model_plan_scope_orders",
+      "team_provider_entitlements",
+      "api_key_plan_source_restrictions",
+      "api_key_plan_source_selections",
+      "api_key_team_scope_selections"
+    ],
+    "pricing": [
+      "access_point_prices",
+      "access_point_price_tiers",
+      "provider_model_costs",
+      "provider_model_cost_tiers"
+    ],
+    "policy": [
+      "budget_policies",
+      "scope_budget_policies",
+      "governance_budget_policies",
+      "scope_governance_budget_policies",
+      "rate_limit_policies",
+      "scope_rate_limit_policies",
+      "pipeline_plugin_settings",
+      "ingress_plugin_settings"
+    ]
+  },
+  "runtimeStateTables": [
+    "abuse_rate_limit_counters",
+    "friday_relay_task_leases",
+    "friday_relay_shadow_risk_reservations",
+    "friday_relay_shadow_risk_state",
+    "seller_settlement_backfill_state",
+    "request_execution_leases",
+    "request_executions",
+    "request_provider_attempts",
+    "budget_claims",
+    "usage_reservations"
+  ],
+  "historicalFactTables": [
+    "audit_logs",
+    "billing_access_point_edges",
+    "billing_events",
+    "billing_history_refs",
+    "billing_provider_cost_archive_entries",
+    "billing_provider_cost_archives",
+    "billing_provider_cost_events",
+    "provider_invocation_usage_facts",
+    "request_logs",
+    "request_log_archive_entries",
+    "request_log_archives",
+    "seller_settlement_events",
+    "seller_settlement_windows",
+    "authority_purchases",
+    "authority_refunds",
+    "authority_uses",
+    "user_provider_entitlement_periods"
+  ],
+  "optionalFeatureTables": [
+    "admin_grant_batch_items",
+    "admin_grant_batches",
+    "agent_catalog_revisions",
+    "authority_grant_quotas",
+    "authority_grants",
+    "authority_products",
+    "card_activation_batches",
+    "card_activation_codes",
+    "card_transfers",
+    "cards",
+    "credit_product_listings",
+    "credit_products",
+    "credit_topup_attachments",
+    "credit_topups",
+    "credit_transfer_policies",
+    "domain_binding_slots",
+    "domain_binding_teams",
+    "domain_bindings",
+    "instance_public_hosts",
+    "mcp_orchestration_runs",
+    "mcp_spend_reservations",
+    "mcp_tool_call_attempts",
+    "partner_operating_entitlements",
+    "partner_team_creation_allocations",
+    "payment_channel_instruction_attachments",
+    "payment_channels",
+    "pi_tunnel_devices",
+    "plan_mcp_tools",
+    "plan_payment_listings",
+    "plan_purchase_orders",
+    "provider_retirement_archives",
+    "resource_permissions",
+    "service_fulfillments",
+    "service_orders",
+    "service_product_listings",
+    "service_products",
+    "stripe_webhook_events",
+    "team_deletion_lifecycles",
+    "user_provider_slots",
+    "web_registration_settings"
+  ],
+  "infrastructureTables": [
+    "friday_relay_pg_schema_meta",
+    "history_archive_artifacts",
+    "history_archive_closures",
+    "history_archive_fact_refs",
+    "identity_migration_batches",
+    "identity_migration_records",
+    "schema_meta",
+    "shared_pg_release_transactions"
+  ],
+  "excludedFromMinimum": {
+    "credit_accounts": {
+      "reason": "paygo",
+      "note": "PayGo balance state is outside the core-LLM minimum profile."
+    },
+    "credit_ledger_events": {
+      "reason": "paygo",
+      "note": "PayGo ledger history is outside the core-LLM minimum profile."
+    },
+    "refresh_tokens": {
+      "reason": "session",
+      "note": "API-key LLM execution does not require persisted user sessions."
+    },
+    "oidc_access_tokens": {
+      "reason": "session",
+      "note": "OIDC session artifacts are outside the core-LLM minimum profile."
+    },
+    "oidc_authorization_codes": {
+      "reason": "session",
+      "note": "OIDC session artifacts are outside the core-LLM minimum profile."
+    },
+    "oidc_refresh_tokens": {
+      "reason": "session",
+      "note": "OIDC session artifacts are outside the core-LLM minimum profile."
+    },
+    "passkey_credentials": {
+      "reason": "session",
+      "note": "Passkey session/authentication artifacts are outside the core-LLM minimum profile."
+    },
+    "webauthn_ceremonies": {
+      "reason": "session",
+      "note": "WebAuthn ceremony state is outside the core-LLM minimum profile."
+    },
+    "webauthn_user_handles": {
+      "reason": "session",
+      "note": "WebAuthn identity artifacts are outside the core-LLM minimum profile."
+    },
+    "request_capture_download_slots": {
+      "reason": "capture",
+      "note": "Request Capture download state is an optional diagnostic feature."
+    },
+    "request_capture_settings": {
+      "reason": "capture",
+      "note": "Request Capture configuration is an optional diagnostic feature."
+    },
+    "account": {
+      "reason": "identity-secret",
+      "note": "Better Auth password and OAuth account credentials remain outside the core-LLM clone."
+    },
+    "session": {
+      "reason": "session",
+      "note": "Persisted Better Auth sessions remain outside the core-LLM clone."
+    },
+    "verification": {
+      "reason": "identity-secret",
+      "note": "One-time Better Auth verification state remains outside the core-LLM clone."
+    }
+  },
+  "columnTransforms": {
+    "api_keys": {
+      "key_value": {
+        "kind": "constant",
+        "value": "friday-relay-clone-redacted"
+      }
+    },
+    "user_controls": {
+      "password_hash": {
+        "kind": "null"
+      }
+    }
+  },
+  "businessReferences": []
+}

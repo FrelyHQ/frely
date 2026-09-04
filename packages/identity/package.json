@@ -1,0 +1,38 @@
+{
+  "name": "@frely/identity",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/public-server.d.ts",
+      "import": "./dist/public-server.js"
+    },
+    "./application-internal": {
+      "types": "./dist/application-internal.d.ts",
+      "import": "./dist/application-internal.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@better-auth/prisma-adapter": "1.7.2",
+    "@frely/audit": "workspace:*",
+    "@frely/auth": "workspace:*",
+    "@frely/config": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/postgres": "workspace:*",
+    "better-auth": "1.7.2"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

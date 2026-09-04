@@ -1,0 +1,7 @@
+{
+  "metricsDays": 35,
+  "tracesDays": 35,
+  "logsDays": 35,
+  "verificationRequired": true,
+  "verificationWindowDays": 30
+}

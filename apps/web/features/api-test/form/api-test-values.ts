@@ -1,0 +1,7 @@
+import type { UserApiTestCommand, UserApiTestValues } from "../types";
+export function defaultRequestPayload(model: string) { return { model, max_completion_tokens: 512, messages: [{ role: "user", content: "Say this is a test." }], stream: false }; }
+export function apiTestDefaults(model = ""): UserApiTestValues { return { model, requestParams: formatJson(defaultRequestPayload(model)) }; }
+export function parseRequestParams(value: string): { ok: true; value: Record<string, unknown> } | { ok: false; message: string } { try { const parsed = JSON.parse(value) as unknown; return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? { ok: true, value: parsed as Record<string, unknown> } : { ok: false, message: "Request parameters must be a JSON object" }; } catch { return { ok: false, message: "Request parameters must be valid JSON" }; } }
+export function updateRequestModel(value: string, model: string) { const parsed = parseRequestParams(value); return parsed.ok ? formatJson({ ...parsed.value, model }) : value; }
+export function toApiTestCommand(values: UserApiTestValues, availableModels: Set<string>, signal: AbortSignal): UserApiTestCommand { const model = values.model.trim(); if (!availableModels.has(model)) throw new Error("Select an available model"); const parsed = parseRequestParams(values.requestParams); if (!parsed.ok) throw new Error(parsed.message); return { payload: { ...parsed.value, model, stream: false }, signal }; }
+export function formatJson(value: unknown) { return JSON.stringify(value, null, 2); }

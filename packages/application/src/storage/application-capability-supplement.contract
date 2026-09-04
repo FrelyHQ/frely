@@ -1,0 +1,1204 @@
+/* Explicit implementation signatures consumed only by the CQRS generator. */
+export interface ApplicationCapabilitySupplement {
+    currentDatabaseTime(): Promise<string>;
+    listTeams(): Promise<import("./application-operation-port.js").Team[]>;
+    pageAdminTeamDirectory(input?: Parameters<ApplicationOperationPort["pageAdminTeamDirectory"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pageAdminTeamDirectory"]>>>;
+    getAdminTeamDirectoryMetrics(at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getAdminTeamDirectoryMetrics"]>>>;
+    getTeam(id: string): Promise<import("./application-operation-port.js").Team | undefined>;
+    getWebRegistrationSetting(): Promise<import("./application-operation-port.js").WebRegistrationSetting | undefined>;
+    updateWebRegistrationSetting(input: {
+        defaultTeamId: string | null;
+        registrationInviteLinkId: string | null;
+        updatedByUserId: string;
+    }): Promise<import("./application-operation-port.js").WebRegistrationSetting>;
+    getActiveTeamDeletion(teamId: string): Promise<import("./application-operation-port.js").TeamDeletionLifecycle | undefined>;
+    assessTeamDeletion(teamId: string): Promise<{
+        teamId: string;
+        deletable: boolean;
+        removableOwnerMembershipId: string | null;
+        blockers: Array<{
+            code: string;
+            count: number;
+        }>;
+    }>;
+    listTeamDeleteBlockersForTeams(teamIds: string[]): Promise<Map<string, Array<{
+        code: string;
+        count: number;
+    }>>>;
+    getTeamDeletionLifecycle(id: string): Promise<import("./application-operation-port.js").TeamDeletionLifecycle | undefined>;
+    requestTeamDeletion(teamId: string, requestedByUserId: string, requestedAt?: string): Promise<import("./application-operation-port.js").TeamDeletionLifecycle>;
+    cancelTeamDeletion(teamId: string, cancelledAt?: string): Promise<import("./application-operation-port.js").TeamDeletionLifecycle>;
+    isTeamAvailable(teamId: string): Promise<boolean>;
+    upsertTeam(input: Partial<import("./application-operation-port.js").Team> & {
+        name: string;
+        ownerId?: string;
+    }): Promise<import("./application-operation-port.js").Team>;
+    createTeam(input: Pick<import("./application-operation-port.js").Team, "id" | "ownerId" | "name" | "status" | "createdAt" | "updatedAt"> & Partial<import("./application-operation-port.js").Team>): Promise<import("./application-operation-port.js").Team>;
+    listUsers(): Promise<import("./application-operation-port.js").User[]>;
+    listUsersByTeam(teamId: string): Promise<import("./application-operation-port.js").User[]>;
+    pageOwnerUserDirectory(input?: Parameters<ApplicationOperationPort["pageOwnerUserDirectory"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pageOwnerUserDirectory"]>>>;
+    getOwnerUserDirectoryMetrics(): Promise<Awaited<ReturnType<ApplicationOperationPort["getOwnerUserDirectoryMetrics"]>>>;
+    getUser(id: string): Promise<import("./application-operation-port.js").User | undefined>;
+    getUserByEmail(email: string): Promise<import("./application-operation-port.js").User | undefined>;
+    upsertUser(input: Partial<import("./application-operation-port.js").User> & {
+        teamId: string;
+        email: string;
+        passwordHash: string;
+        createMembership?: boolean;
+    }): Promise<import("./application-operation-port.js").User>;
+    createUser(input: Pick<import("./application-operation-port.js").User, "id" | "teamId" | "email" | "passwordHash" | "status" | "createdAt" | "updatedAt"> & Partial<import("./application-operation-port.js").User>): Promise<import("./application-operation-port.js").User>;
+    getTeamMembership(teamId: string, userId: string): Promise<import("./application-operation-port.js").TeamMembership | undefined>;
+    listTeamMemberships(userId: string): Promise<import("./application-operation-port.js").TeamMembership[]>;
+    listAvailableTeamMemberships(userId: string): Promise<import("./application-operation-port.js").TeamMembership[]>;
+    pageUserTeamDirectory(userId: string, input?: {
+        query?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserTeamDirectory"]>>>;
+    userNavigationSummary(userId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["userNavigationSummary"]>>>;
+    getUserTeamIdentity(userId: string, teamId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getUserTeamIdentity"]>>>;
+    getUserDirectoryFacts(input: {
+        memberTeamIds?: string[];
+        usageTeamIds?: string[];
+        billingTeamIds?: string[];
+    }, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getUserDirectoryFacts"]>>>;
+    pageTeamMemberSummaries(teamId: string, page?: number, pageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageTeamMemberSummaries"]>>>;
+    getTeamMemberSummary(teamId: string, userId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getTeamMemberSummary"]>>>;
+    getTeamDetailCounts(teamId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getTeamDetailCounts"]>>>;
+    resolveEnabledPublicHost(hostname: string): Promise<import("./public-host.js").InstancePublicHost | null>;
+    pagePublicHosts(page?: number, pageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePublicHosts"]>>>;
+    getPublicHostRecord(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getPublicHostRecord"]>>>;
+    findPublicHostRecordByHostname(hostname: string): Promise<Awaited<ReturnType<ApplicationOperationPort["findPublicHostRecordByHostname"]>>>;
+    hasDomainBindingHostname(hostname: string): Promise<boolean>;
+    createPublicHostRecord(row: import("./public-host.js").InstancePublicHost): Promise<import("./public-host.js").InstancePublicHost>;
+    updatePublicHostRecord(input: {
+        id: string;
+        enabled: boolean;
+        updatedByUserId: string;
+        updatedAt: string;
+    }): Promise<Awaited<ReturnType<ApplicationOperationPort["updatePublicHostRecord"]>>>;
+    deletePublicHostRecord(id: string): Promise<boolean>;
+    resolveActiveDomainBinding(hostname: string): Promise<import("./domain-binding.js").ActiveDomainBinding | null>;
+    pageEnabledServiceProducts(input?: import("./queries/commerce.js").ServiceProductDirectoryInput): Promise<import("./queries/pagination.js").PageResult<import("./queries/commerce.js").ServiceProductDirectoryRow>>;
+    listServiceProducts(): Promise<import("./partner-commerce.js").ServiceProduct[]>;
+    createServiceProduct(input: {
+        code: string;
+        displayName: string;
+        description?: string | null;
+        fulfillmentEffect: "partner_team_annual";
+        durationSeconds?: number | null;
+        partnerPlanId?: string | null;
+        createdByUserId: string;
+    }): Promise<import("./partner-commerce.js").ServiceProduct>;
+    updateServiceProductStatus(id: string, status: "enabled" | "disabled", actorUserId: string): Promise<import("./partner-commerce.js").ServiceProduct>;
+    listServiceProductListings(productId?: string): Promise<import("./partner-commerce.js").ServiceProductListing[]>;
+    createServiceProductListing(input: {
+        productId: string;
+        paymentChannelId: string;
+        priceAmountUnits: number;
+        createdByUserId: string;
+    }): Promise<import("./partner-commerce.js").ServiceProductListing>;
+    updateServiceProductListingStatus(id: string, status: "enabled" | "disabled", actorUserId: string): Promise<import("./partner-commerce.js").ServiceProductListing>;
+    getServiceProduct(id: string): Promise<import("./partner-commerce.js").ServiceProduct | undefined>;
+    getServiceProductListing(id: string): Promise<import("./partner-commerce.js").ServiceProductListing | undefined>;
+    getServiceOrder(id: string): Promise<import("./partner-commerce.js").ServiceOrder | undefined>;
+    listServiceOrdersForBuyer(buyerUserId: string): Promise<import("./partner-commerce.js").ServiceOrder[]>;
+    listServiceOrders(): Promise<import("./partner-commerce.js").ServiceOrder[]>;
+    listServiceFulfillments(): Promise<import("./partner-commerce.js").ServiceFulfillment[]>;
+    createServiceOrder(input: {
+        buyerUserId: string;
+        productListingId: string;
+        purchaseIntent: "new" | "renew";
+        targetPartnerTeamId?: string | null;
+        idempotencyKey: string;
+    }): Promise<import("./partner-commerce.js").ServiceOrder>;
+    submitServiceOrderPayment(input: {
+        orderId: string;
+        buyerUserId: string;
+        transactionReference: string;
+    }): Promise<import("./partner-commerce.js").ServiceOrder>;
+    cancelServiceOrder(input: {
+        orderId: string;
+        buyerUserId: string;
+    }): Promise<import("./partner-commerce.js").ServiceOrder>;
+    approveServiceOrder(input: {
+        orderId: string;
+        ownerUserId: string;
+        confirmedReceivedAmountUnits: number;
+        reviewNote: string;
+    }): Promise<{
+        order: import("./partner-commerce.js").ServiceOrder;
+        fulfillment: import("./partner-commerce.js").ServiceFulfillment;
+    }>;
+    retryServiceOrderFulfillment(input: {
+        orderId: string;
+        ownerUserId: string;
+    }): Promise<{
+        order: import("./partner-commerce.js").ServiceOrder;
+        fulfillment: import("./partner-commerce.js").ServiceFulfillment;
+    }>;
+    rejectServiceOrder(input: {
+        orderId: string;
+        ownerUserId: string;
+        reviewNote: string;
+    }): Promise<import("./partner-commerce.js").ServiceOrder>;
+    getPartnerTeamCreationAllocation(id: string): Promise<import("./partner-commerce.js").PartnerTeamCreationAllocation | undefined>;
+    listAvailablePartnerTeamCreationAllocations(ownerUserId: string): Promise<import("./partner-commerce.js").PartnerTeamCreationAllocation[]>;
+    consumePartnerTeamCreationAllocation(input: {
+        allocationId: string;
+        ownerUserId: string;
+        teamName: string;
+        at?: string;
+        source?: import("./audit.js").AuditSource;
+    }): Promise<{
+        allocation: import("./partner-commerce.js").PartnerTeamCreationAllocation;
+        entitlement: import("./partner-commerce.js").PartnerOperatingEntitlement;
+        teamId: string;
+    }>;
+    listDomainBindingsForOwner(ownerUserId: string): Promise<import("./domain-binding.js").DomainBinding[]>;
+    listDomainBindings(): Promise<import("./domain-binding.js").DomainBinding[]>;
+    getDomainBinding(id: string): Promise<import("./domain-binding.js").DomainBinding | undefined>;
+    grantDomainBindingSlot(input: {
+        orderId: string;
+        actorUserId: string;
+    }): Promise<{
+        id: string;
+        ownerUserId: string;
+    }>;
+    verifyDomainBinding(id: string, actorUserId: string): Promise<import("./domain-binding.js").DomainBinding>;
+    activateDomainBinding(input: {
+        id: string;
+        actorUserId: string;
+        registrationInviteLinkId: string;
+    }): Promise<import("./domain-binding.js").DomainBinding>;
+    setDomainBindingStatus(id: string, actorUserId: string, status: "disabled" | "released"): Promise<import("./domain-binding.js").DomainBinding>;
+    createDomainBinding(input: {
+        ownerUserId: string;
+        hostname: string;
+        teamIds: string[];
+        defaultRegistrationTeamId: string;
+    }): Promise<{
+        binding: import("./domain-binding.js").DomainBinding;
+        verificationName: string;
+        verificationValue: string;
+    }>;
+    consumeAbuseRateLimit(input: Parameters<ApplicationOperationPort["consumeAbuseRateLimit"]>[0]): Promise<import("./application-operation-port.js").AbuseRateLimitDecision>;
+    consumeAbuseRateLimits(input: Parameters<ApplicationOperationPort["consumeAbuseRateLimits"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["consumeAbuseRateLimits"]>>>;
+    inspectAbuseRateLimit(input: Parameters<ApplicationOperationPort["inspectAbuseRateLimit"]>[0]): Promise<import("./application-operation-port.js").AbuseRateLimitDecision>;
+    deleteExpiredAbuseRateLimits(nowMs?: number, limit?: number): Promise<number>;
+    listEffectiveSubscriptionScopesForUser(userId: string): Promise<import("@frely/core").ScopeRef[]>;
+    getActivePlanIdentity(scopeRefs: import("@frely/core").ScopeRef[], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getActivePlanIdentity"]>>>;
+    pageBudgetLimits(planId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageBudgetLimits"]>>>;
+    pagePlanAccessPoints(planId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanAccessPoints"]>>>;
+    getPlanStatusImpact(planId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getPlanStatusImpact"]>>>;
+    pagePlanDirectory(input?: Parameters<ApplicationOperationPort["pagePlanDirectory"]>[0], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanDirectory"]>>>;
+    pagePlanSubscriptions(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanSubscriptions"]>>>;
+    countPlanSubscriptions(filter?: Parameters<ApplicationOperationPort["countPlanSubscriptions"]>[0]): Promise<number>;
+    listPlanSubscriptionSources(): Promise<string[]>;
+    getPlanSubscription(id: string): Promise<import("./application-operation-port.js").PlanSubscription | undefined>;
+    listPlanSubscriptions(filter?: Parameters<ApplicationOperationPort["listPlanSubscriptions"]>[0], limit?: number, offset?: number): Promise<import("./application-operation-port.js").PlanSubscription[]>;
+    isPlanSubscriptionUserEligible(subscriptionId: string, userId: string, at?: string): Promise<boolean>;
+    pageTeamProviderDirectory(scopeRef: import("@frely/core").ScopeRef, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageTeamProviderDirectory"]>>>;
+    pageUserStore(userId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserStore"]>>>;
+    pagePurchasableAuthorityProducts(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePurchasableAuthorityProducts"]>>>;
+    pageAuthorityProducts(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageAuthorityProducts"]>>>;
+    getAuthorityProduct(id: string): Promise<import("./authority.js").AuthorityProduct | undefined>;
+    getAuthorityGrant(id: string): Promise<import("./authority.js").AuthorityGrant | undefined>;
+    createAuthorityProductVersion(input: import("./authority.js").AuthorityProductTerms & { code: string; actorOwnerUserId: string }): Promise<import("./authority.js").AuthorityProduct>;
+    updateDraftAuthorityProduct(id: string, input: import("./authority.js").AuthorityProductTerms & { actorOwnerUserId: string }): Promise<import("./authority.js").AuthorityProduct>;
+    listAuthorityProductVersion(id: string, actorOwnerUserId: string): Promise<import("./authority.js").AuthorityProduct>;
+    closeAuthorityProduct(id: string, actorOwnerUserId: string): Promise<import("./authority.js").AuthorityProduct>;
+    grantTeamProviderAccess(input: {
+        teamId: string;
+        productId: string;
+        actorOwnerUserId: string;
+        idempotencyKey: string;
+    }): Promise<{
+        entitlement: import("./authority.js").TeamProviderEntitlement;
+        replayed: boolean;
+    }>;
+    cancelTeamProviderEntitlement(input: {
+        entitlementId: string;
+        actorOwnerUserId: string;
+        reasonCode: string;
+    }): Promise<import("./authority.js").TeamProviderEntitlement>;
+    cancelAuthorityGrant(input: {
+        grantId: string;
+        actorOwnerUserId: string;
+        reasonCode: string;
+    }): Promise<import("./authority.js").AuthorityGrant>;
+    refundAuthorityPurchase(input: {
+        purchaseId: string;
+        actorOwnerUserId: string;
+        reasonCode: string;
+        idempotencyKey: string;
+    }): Promise<import("./authority.js").AuthorityRefundResult>;
+    searchTeamProviderProductCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchTeamProviderProductCandidates"]>>>;
+    searchWebRegistrationCandidates(query?: string, cursor?: string | null): Promise<{
+        items: Array<{
+            id: string;
+            name: string;
+        }>;
+        nextCursor: string | null;
+    }>;
+    cursorTeamProviderEntitlements(teamId: string, cursor?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["cursorTeamProviderEntitlements"]>>>;
+    pageResourcePermissions(resourceType: string, resourceId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageResourcePermissions"]>>>;
+    searchUserCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchUserCandidates"]>>>;
+    searchNonMemberUserCandidates(teamId: string, query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchNonMemberUserCandidates"]>>>;
+    searchTeamCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchTeamCandidates"]>>>;
+    searchApiKeyCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchApiKeyCandidates"]>>>;
+    searchBudgetPolicyCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchBudgetPolicyCandidates"]>>>;
+    searchGovernanceBudgetPolicyCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchGovernanceBudgetPolicyCandidates"]>>>;
+    searchAdminCardCandidates(userId: string, query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchAdminCardCandidates"]>>>;
+    searchPlanReplacementCandidates(sourcePlanId: string, query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchPlanReplacementCandidates"]>>>;
+    searchPlanAccessPointCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchAccessPointCandidates"]>>>;
+    pageOwnerApiKeyDirectory(input?: {
+        query?: string;
+        page?: number;
+        pageSize?: number;
+    }, at?: string): Promise<import("./queries/pagination.js").PageResult<import("./queries/api-keys.js").OwnerApiKeyDirectoryRow>>;
+    getOwnerApiKeyDirectoryMetrics(): Promise<import("./queries/api-keys.js").OwnerApiKeyDirectoryMetrics>;
+    pageBudgetPolicies(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+        status?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/budgets.js").BudgetPolicy>>;
+    pageScopeBudgetPolicyAssignments(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+        status?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/budgets.js").DirectBudgetAssignmentRow>>;
+    pageGovernanceBudgetPolicies(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+        status?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/budgets.js").GovernanceBudgetPolicy>>;
+    pageScopeGovernanceBudgetPolicyAssignments(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+        status?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/budgets.js").GovernanceBudgetAssignmentRow>>;
+    listPlanSubscriptionPlanCandidates(search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanSubscriptionPlanCandidates"]>>>;
+    listPlanSubscriptionScopeCandidates(search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanSubscriptionScopeCandidates"]>>>;
+    listPlanSubscriptionAccountCandidates(search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanSubscriptionAccountCandidates"]>>>;
+    listPlanSubscriptionUserCandidates(subscriptionId: string, search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanSubscriptionUserCandidates"]>>>;
+    listAdminGrantUserCandidates(search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listAdminGrantUserCandidates"]>>>;
+    listAdminGrantCreditProductCandidates(search?: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listAdminGrantCreditProductCandidates"]>>>;
+    countAdminGrantBatches(): Promise<number>;
+    listAdminGrantBatches(limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listAdminGrantBatches"]>>>;
+    getAdminGrantBatchDetail(id: string, limit?: number, offset?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["getAdminGrantBatchDetail"]>>>;
+    pageUserAuthorityGrants(userId: string, page?: number, at?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserAuthorityGrants"]>>>;
+    hasAvailableUserGrant(userId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["hasAvailableUserGrant"]>>>;
+    purchaseAuthorityProduct(input: {
+        buyerUserId: string;
+        productId: string;
+        idempotencyKey: string;
+    }): Promise<import("./authority.js").AuthorityPurchaseResult>;
+    purchaseTeamProviderAuthorityProduct(input: {
+        buyerUserId: string;
+        productId: string;
+        teamId: string;
+        idempotencyKey: string;
+    }): Promise<import("./authority.js").AuthorityTeamProviderPurchaseResult>;
+    createAuthorityTeam(input: {
+        beneficiaryUserId: string;
+        name: string;
+        idempotencyKey: string;
+    }): Promise<import("./authority.js").AuthorityTeamCreateResult>;
+    pageUserCreditCatalog(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserCreditCatalog"]>>>;
+    pageCreditAccounts(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageCreditAccounts"]>>>;
+    pageAdminCreditUserAccounts(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/credits.js").UserCreditAccountDirectoryRow>>;
+    pageAdminNonUserCreditAccounts(input?: {
+        page?: number;
+        pageSize?: number;
+        query?: string;
+    }): Promise<import("./queries/pagination.js").PageResult<import("./queries/credits.js").NonUserCreditAccountDirectoryRow>>;
+    getAdminCreditDirectorySummary(): Promise<import("./queries/credits.js").CreditDirectorySummary>;
+    getAdminCreditConfigurationSummary(): Promise<import("./queries/credits.js").CreditConfigurationSummary>;
+    pageDraftPaymentChannels(page?: number, requestedPageSize?: number): Promise<import("./queries/pagination.js").PageResult<import("./queries/credits.js").DraftPaymentChannelRow>>;
+    pageCardTransfers(referenceCode?: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageCardTransfers"]>>>;
+    pageUserPlanCards(userId: string, planId: string, page?: number, at?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserPlanCards"]>>>;
+    pageUserCardInventory(userId: string, page?: number, at?: string, requestedPageSize?: number, inventoryStatus?: import("./queries/credits.js").UserCardInventoryStatusFilter): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserCardInventory"]>>>;
+    pageUserCardTransfers(userId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserCardTransfers"]>>>;
+    pageCreditProducts(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageCreditProducts"]>>>;
+    pagePaymentChannels(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePaymentChannels"]>>>;
+    pageCreditProductListings(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageCreditProductListings"]>>>;
+    pageCreditTransferPolicies(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageCreditTransferPolicies"]>>>;
+    searchCreditProductCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchCreditProductCandidates"]>>>;
+    searchPaymentChannelCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchPaymentChannelCandidates"]>>>;
+    cursorUserTopups(userId: string, cursor?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["cursorUserTopups"]>>>;
+    cursorAdminTopups(cursor?: string, userId?: string, status?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["cursorAdminTopups"]>>>;
+    cursorCreditLedger(accountId: string, cursor?: string, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["cursorCreditLedger"]>>>;
+    expireCreditTopups(now?: string, userId?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["expireCreditTopups"]>>>;
+    searchActiveTeamSubscriptionCandidates(input: Parameters<ApplicationOperationPort["searchActiveTeamSubscriptionCandidates"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["searchActiveTeamSubscriptionCandidates"]>>>;
+    pageTeamMemberUsage(input: Parameters<ApplicationOperationPort["pageTeamMemberUsage"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pageTeamMemberUsage"]>>>;
+    listActivePlanSubscriptionsForScopeRefs(scopeRefs: import("@frely/core").ScopeRef[], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listActivePlanSubscriptionsForScopeRefs"]>>>;
+    listPlanBudgetUsageSourcesForUser(userId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanBudgetUsageSourcesForUser"]>>>;
+    summarizeScopeBudgetUsageWindows(scopeRef: import("@frely/core").ScopeRef, windows: Parameters<ApplicationOperationPort["summarizeScopeBudgetUsageWindows"]>[1]): Promise<Awaited<ReturnType<ApplicationOperationPort["summarizeScopeBudgetUsageWindows"]>>>;
+    createTeamInviteLink(input: {
+        teamId: string;
+        createdByUserId: string;
+        maxUses: number | null;
+        activeLimitExempt?: boolean;
+        id?: string;
+        status?: string;
+        createdAt?: string;
+        updatedAt?: string;
+    }): Promise<import("./application-operation-port.js").TeamInviteLink>;
+    getOrCreateActiveTeamInviteLink(teamId: string, createdByUserId: string, maxUses: number | null): Promise<import("./application-operation-port.js").TeamInviteLinkCreateResult>;
+    getTeamInviteLink(id: string): Promise<import("./application-operation-port.js").TeamInviteLink | undefined>;
+    listTeamInviteLinks(teamId: string): Promise<import("./application-operation-port.js").TeamInviteLink[]>;
+    listTeamInviteLinksByCreator(teamId: string, createdByUserId: string): Promise<import("./application-operation-port.js").TeamInviteLink[]>;
+    pageTeamInviteLinks(teamId: string, input?: {
+        createdByUserId?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<Awaited<ReturnType<ApplicationOperationPort["pageTeamInviteLinks"]>>>;
+    getActiveTeamInviteLinkForCreator(teamId: string, createdByUserId: string): Promise<import("./application-operation-port.js").TeamInviteLink | undefined>;
+    disableTeamInviteLink(id: string): Promise<import("./application-operation-port.js").TeamInviteLink | undefined>;
+    consumeTeamInviteLinkUse(id: string): Promise<import("./application-operation-port.js").TeamInviteLink>;
+    listEnabledTeamInviteLinksByCreator(teamId: string, createdByUserId: string): Promise<import("./application-operation-port.js").TeamInviteLink[]>;
+    listEnabledNonOwnerTeamInviteLinks(teamId: string, ownerId: string): Promise<import("./application-operation-port.js").TeamInviteLink[]>;
+    isTeamMemberInvitesEnabled(teamId: string): Promise<boolean>;
+    grantTeamMembership(teamId: string, userId: string, roles?: readonly string[], byInviteLink?: string | null): Promise<import("./application-operation-port.js").TeamMembership>;
+    grantTeamMembershipByInvite(teamId: string, userId: string, inviteLinkId: string): Promise<import("./application-operation-port.js").TeamMembership>;
+    ensureFallbackTeamMembership(userId: string, audit: {
+        actor: {
+            actorType: "user" | "api_key" | "system";
+            actorId: string;
+        };
+        source: "owner" | "web" | "gateway" | "system";
+        requestId?: string | null;
+    }): Promise<{
+        membership: import("./application-operation-port.js").TeamMembership;
+        created: boolean;
+    }>;
+    deleteTeamMembership(teamId: string, userId: string): Promise<import("./application-operation-port.js").TeamMembership | undefined>;
+    updateTeamMembershipRoles(teamId: string, userId: string, roles: readonly string[]): Promise<import("./application-operation-port.js").TeamMembership | undefined>;
+    listResourcePermissionsForResource(resourceType: string, resourceId: string): Promise<import("./application-operation-port.js").ResourcePermission[]>;
+    updateTeamInviteEmailDomainPattern(teamId: string, pattern: string | null): Promise<import("./application-operation-port.js").Team>;
+    updateTeamOwner(teamId: string, ownerId: string): Promise<import("./application-operation-port.js").Team | undefined>;
+    updateUserAdminNote(id: string, adminNote: string | null): Promise<import("./application-operation-port.js").User | undefined>;
+    updateUserApiKeyLimit(id: string, apiKeyLimit: number): Promise<import("./application-operation-port.js").User | undefined>;
+    updateUserDelegatedCreationPermissions(id: string, input: {
+        userCanCreateCustomProvider?: number;
+        userCanCreateAccessPoint?: number;
+    }): Promise<import("./application-operation-port.js").User | undefined>;
+    updateUserStatus(id: string, status: string): Promise<import("./application-operation-port.js").User | undefined>;
+    getOrCreateWebAuthnUserHandle(input: {
+        userId: string;
+        candidateHandle: string;
+        additionalCandidateHandles?: string[];
+    }): Promise<import("./application-operation-port.js").WebAuthnUserHandle>;
+    getWebAuthnUserHandle(userId: string): Promise<import("./application-operation-port.js").WebAuthnUserHandle | undefined>;
+    listPasskeyCredentials(userId: string, rpId?: string): Promise<import("./application-operation-port.js").PasskeyCredential[]>;
+    getPasskeyCredential(id: string): Promise<import("./application-operation-port.js").PasskeyCredential | undefined>;
+    getPasskeyCredentialByCredentialId(credentialId: string): Promise<import("./application-operation-port.js").PasskeyCredential | undefined>;
+    createWebAuthnCeremony(input: Omit<import("./application-operation-port.js").WebAuthnCeremony, "createdAt"> & {
+        createdAt?: string;
+    }, cleanupLimit?: number): Promise<import("./application-operation-port.js").WebAuthnCeremony>;
+    takeWebAuthnCeremony(input: {
+        sessionHash: string;
+        purpose: import("./application-operation-port.js").WebAuthnCeremony["purpose"];
+        surface: import("./application-operation-port.js").WebAuthnCeremony["surface"];
+        now?: string;
+    }): Promise<import("./application-operation-port.js").WebAuthnCeremony | undefined>;
+    createRefreshToken(input: {
+        userId: string;
+        tokenHash: string;
+        expiresAt: string;
+    }): Promise<import("./application-operation-port.js").RefreshToken>;
+    createRefreshTokenForAuthVersion(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        tokenHash: string;
+        expiresAt: string;
+    }): Promise<import("./application-operation-port.js").RefreshToken>;
+    getRefreshTokenByHash(tokenHash: string): Promise<import("./application-operation-port.js").RefreshToken | undefined>;
+    rotateRefreshToken(input: {
+        tokenHash: string;
+        userId: string;
+        expectedAuthVersion: number;
+        replacementTokenHash: string;
+        replacementExpiresAt: string;
+    }): Promise<import("./application-operation-port.js").RefreshToken | undefined>;
+    revokeRefreshToken(tokenHash: string): Promise<void>;
+    registerUserPasskey(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        credentialId: string;
+        publicKey: string;
+        signCount: number;
+        transportsJson: string;
+        deviceType: import("./application-operation-port.js").PasskeyCredential["deviceType"];
+        backedUp: number;
+        rpId: string;
+        name: string;
+        source: "web" | "owner";
+        requestId?: string | null | undefined;
+    }): Promise<import("./application-operation-port.js").PasskeyCredential>;
+    listUserPasskeysAudited(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        source: "web" | "owner";
+        requestId?: string | null | undefined;
+    }): Promise<import("./application-operation-port.js").PasskeyCredential[]>;
+    renameUserPasskey(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        passkeyId: string;
+        name: string;
+        source: "web" | "owner";
+        requestId?: string | null | undefined;
+    }): Promise<import("./application-operation-port.js").PasskeyCredential>;
+    completePasskeyLogin(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        passkeyId: string;
+        credentialId: string;
+        rpId: string;
+        expectedUpdatedAt: string;
+        expectedSignCount: number;
+        newSignCount: number;
+        deviceType: import("./application-operation-port.js").PasskeyCredential["deviceType"];
+        backedUp: number;
+        refreshTokenHash: string;
+        refreshTokenExpiresAt: string;
+        source: "web" | "owner";
+        requestId?: string | null | undefined;
+        auditMetadata: Record<string, unknown>;
+    }): Promise<import("./application-operation-port.js").User>;
+    deleteUserPasskeyAndRotateSession(input: {
+        userId: string;
+        expectedAuthVersion: number;
+        expectedPasswordHash: string;
+        passkeyId: string;
+        newRefreshTokenHash: string;
+        newRefreshTokenExpiresAt: string;
+        source: "web" | "owner";
+        requestId?: string | null | undefined;
+    }): Promise<import("./application-operation-port.js").User>;
+    rotateOwnPassword(input: {
+        userId: string;
+        expectedPasswordHash: string;
+        newPasswordHash: string;
+        newRefreshTokenHash: string;
+        newRefreshTokenExpiresAt: string;
+        surface: "web" | "owner";
+        requestId?: string | null | undefined;
+    }): Promise<import("./application-operation-port.js").User>;
+    createOidcAuthorizationCode(input: {
+        codeHash: string;
+        userId: string;
+        clientId: string;
+        redirectUri: string;
+        scope: string;
+        codeChallenge: string;
+        nonce: string;
+        expiresAt: string;
+    }): Promise<import("./application-operation-port.js").OidcAuthorizationCode>;
+    getOidcAuthorizationCodeByHash(codeHash: string): Promise<import("./application-operation-port.js").OidcAuthorizationCode | undefined>;
+    exchangeOidcAuthorizationCode(input: {
+        codeHash: string;
+        clientId: string;
+        redirectUri: string;
+        codeChallenge: string;
+        accessTokenHash: string;
+        accessTokenAudience: string;
+        accessTokenExpiresAt: string;
+        refreshToken?: {
+            tokenHash: string;
+            familyId: string;
+            expiresAt: string;
+        };
+        now?: string;
+    }): Promise<{
+        authorizationCode: import("./application-operation-port.js").OidcAuthorizationCode;
+        accessToken: import("./application-operation-port.js").OidcAccessToken;
+        refreshToken: import("./application-operation-port.js").OidcRefreshToken | null;
+        user: import("./application-operation-port.js").User;
+    }>;
+    getOidcAccessTokenByHash(tokenHash: string): Promise<import("./application-operation-port.js").OidcAccessToken | undefined>;
+    revokeOidcAccessToken(tokenHash: string, clientId: string): Promise<void>;
+    getOidcRefreshTokenByHash(tokenHash: string): Promise<import("./application-operation-port.js").OidcRefreshToken | undefined>;
+    rotateOidcRefreshToken(input: {
+        tokenHash: string;
+        clientId: string;
+        newTokenHash: string;
+        accessTokenHash: string;
+        accessTokenAudience: string;
+        accessTokenExpiresAt: string;
+        refreshTokenExpiresAt: string;
+        now?: string;
+    }): Promise<{
+        status: "rotated";
+        accessToken: import("./application-operation-port.js").OidcAccessToken;
+        refreshToken: import("./application-operation-port.js").OidcRefreshToken;
+        user: import("./application-operation-port.js").User;
+    } | {
+        status: "invalid" | "replayed";
+    }>;
+    revokeOidcRefreshToken(tokenHash: string, clientId: string): Promise<void>;
+    deleteExpiredOidcState(now?: string): Promise<{
+        authorizationCodes: number;
+        accessTokens: number;
+        refreshTokens: number;
+    }>;
+    platformRolesForUser(userId: string): Promise<string[]>;
+    teamRolesForUser(userId: string): Promise<string[]>;
+    canUserSetCardReferenceCode(userId: string): Promise<boolean>;
+    activeBootstrapPlatformOwnerId(): Promise<string | null>;
+    ensurePlatformOwnerGrant(userId: string): Promise<import("./application-operation-port.js").BootstrapOwnerGrant>;
+    handoverPlatformOwner(input: {
+        currentOwnerUserId: string;
+        nextOwnerUserId: string;
+    }): Promise<import("./application-operation-port.js").BootstrapOwnerGrant>;
+    listApiKeys(userId?: string): Promise<import("./application-operation-port.js").ApiKey[]>;
+    getApiKey(id: string): Promise<import("./application-operation-port.js").ApiKey | undefined>;
+    listApiKeySummariesByIds(userId: string, ids: string[]): Promise<Awaited<ReturnType<ApplicationOperationPort["listApiKeySummariesByIds"]>>>;
+    searchTeamProviderPurchaseCandidates(userId: string, query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchTeamProviderPurchaseCandidates"]>>>;
+    getApiKeyByHash(keyHash: string): Promise<import("./application-operation-port.js").ApiKey | undefined>;
+    createApiKey(input: {
+        userId: string;
+        name: string;
+        keyHash: string;
+        keyPrefix: string;
+        keyValue: string;
+        expiresAt?: string | null;
+    }): Promise<import("./application-operation-port.js").ApiKey>;
+    countEnabledApiKeysForUser(userId: string): Promise<number>;
+    revokeApiKey(id: string): Promise<import("./application-operation-port.js").ApiKey | undefined>;
+    updateApiKeyStatus(id: string, status: "enabled" | "disabled"): Promise<import("./application-operation-port.js").ApiKey | undefined>;
+    listProviders(): Promise<import("./application-operation-port.js").Provider[]>;
+    pageProviderDirectory(input?: Parameters<ApplicationOperationPort["pageProviderDirectory"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pageProviderDirectory"]>>>;
+    getProviderDirectorySummary(): Promise<Awaited<ReturnType<ApplicationOperationPort["getProviderDirectorySummary"]>>>;
+    searchProviderCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchProviderCandidates"]>>>;
+    pageProviderModels(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageProviderModels"]>>>;
+    pageAccessPointDirectory(input?: Parameters<ApplicationOperationPort["pageAccessPointDirectory"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pageAccessPointDirectory"]>>>;
+    searchAccessPointCandidates(query?: string, page?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["searchAccessPointCandidates"]>>>;
+    pageEffectiveAccessPointsForTeam(teamId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageEffectiveAccessPointsForTeam"]>>>;
+    pageScopedAccessPointPrices(scopeRef: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageScopedAccessPointPrices"]>>>;
+    pageProviderModelCosts(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageProviderModelCosts"]>>>;
+    pageAccessPointPrices(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageAccessPointPrices"]>>>;
+    pageScopedAccessPointDirectory(scopeRef: string, page?: number, requestedPageSize?: number): Promise<import("./queries/pagination.js").PageResult<import("./queries/access-points.js").ScopedAccessPointDirectoryRow>>;
+    pagePlanSubscriptionsForScope(scopeRef: string, page?: number, planStatus?: import("./queries/plans.js").TeamPlanStatusFilter, requestedPageSize?: number): Promise<import("./queries/pagination.js").PageResult<import("./queries/plans.js").TeamPlanSubscriptionDirectoryRow>>;
+    listDirectPermissionsForSubjects(resourceType: string, resourceId: string, subjectRefs: string[]): Promise<import("./queries/teams.js").ResourcePermissionDirectoryRow[]>;
+    workbenchSummary(): Promise<import("./queries/pricing.js").PricingWorkbenchSummary>;
+    pageProviderCostWorkbench(input?: import("./queries/pricing.js").ProviderCostWorkbenchInput): Promise<import("./queries/pricing.js").ProviderCostWorkbenchPage>;
+    pageAccessPointPriceWorkbench(input?: import("./queries/pricing.js").AccessPointPriceWorkbenchInput): Promise<import("./queries/pricing.js").AccessPointPriceWorkbenchPage>;
+    pagePlanAccessPointPrices(page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanAccessPointPrices"]>>>;
+    listBudgetPolicies(): Promise<Awaited<ReturnType<ApplicationOperationPort["listBudgetPolicies"]>>>;
+    createBudgetPolicy(input: Partial<import("./application-operation-port.js").BudgetPolicy> & {
+        metric: string;
+        limitValue: number;
+        windowType: string;
+    }): Promise<import("./application-operation-port.js").BudgetPolicy>;
+    updateBudgetPolicy(id: string, input: Partial<Omit<import("./application-operation-port.js").BudgetPolicy, "id" | "createdAt" | "updatedAt">>): Promise<import("./application-operation-port.js").BudgetPolicy | undefined>;
+    deleteBudgetPolicy(id: string): Promise<boolean>;
+    createGovernanceBudgetPolicy(input: Partial<import("./application-operation-port.js").GovernanceBudgetPolicy> & {
+        metric: string;
+        limitValue: number;
+        windowType: string;
+    }): Promise<import("./application-operation-port.js").GovernanceBudgetPolicy>;
+    updateGovernanceBudgetPolicy(id: string, input: Partial<Omit<import("./application-operation-port.js").GovernanceBudgetPolicy, "id" | "createdAt" | "updatedAt">>): Promise<import("./application-operation-port.js").GovernanceBudgetPolicy | undefined>;
+    deleteGovernanceBudgetPolicy(id: string): Promise<boolean>;
+    assignBudgetPolicyToScope(input: {
+        scopeRef: import("@frely/core").ScopeRef;
+        budgetPolicyId: string;
+        status?: string;
+    }): Promise<import("./application-operation-port.js").ScopeBudgetPolicy>;
+    updateScopeBudgetPolicyAssignment(id: string, input: Partial<Omit<import("./application-operation-port.js").ScopeBudgetPolicy, "id" | "createdAt" | "updatedAt">>): Promise<import("./application-operation-port.js").ScopeBudgetPolicy | undefined>;
+    deleteScopeBudgetPolicyAssignment(id: string): Promise<boolean>;
+    assignGovernanceBudgetPolicyToScope(input: {
+        scopeRef: import("@frely/core").ScopeRef;
+        governanceBudgetPolicyId: string;
+        status?: string;
+    }): Promise<import("./application-operation-port.js").ScopeGovernanceBudgetPolicy>;
+    updateScopeGovernanceBudgetPolicyAssignment(id: string, input: Partial<Omit<import("./application-operation-port.js").ScopeGovernanceBudgetPolicy, "id" | "createdAt" | "updatedAt">>): Promise<import("./application-operation-port.js").ScopeGovernanceBudgetPolicy | undefined>;
+    deleteScopeGovernanceBudgetPolicyAssignment(id: string): Promise<boolean>;
+    getProvider(id: string): Promise<import("./application-operation-port.js").Provider | undefined>;
+    getProviderBinding(providerId: string): Promise<import("./application-operation-port.js").ProviderBinding | undefined>;
+    getProviderBindingRefreshSnapshots(providerIds: string[]): Promise<Array<{
+        provider: import("./application-operation-port.js").Provider;
+        binding: import("./application-operation-port.js").ProviderBinding | null;
+    }>>;
+    upsertProviderBinding(input: Parameters<ApplicationOperationPort["upsertProviderBinding"]>[0]): Promise<import("./application-operation-port.js").ProviderBinding>;
+    updateProviderBindingStatusIfCurrent(input: {
+        providerId: string;
+        expectedCpaInstanceId: string;
+        expectedRevision: number;
+        syncStatus: import("./application-operation-port.js").ProviderBinding["syncStatus"];
+        errorCode?: string | null;
+        clearCredentialSummary?: boolean;
+    }): Promise<import("./application-operation-port.js").ProviderBinding | undefined>;
+    getTeamProviderEntitlementState(teamId: string, at?: string): Promise<import("./authority.js").TeamProviderEntitlementState>;
+    getPartnerOperatingState(partnerTeamId: string, at?: string): Promise<import("./partner-commerce.js").PartnerOperatingState>;
+    assertPartnerManagementActive(partnerTeamId: string, at?: string): Promise<void>;
+    createProvider(input: Partial<import("./application-operation-port.js").Provider> & {
+        id: string;
+        name: string;
+        kind: string;
+        baseUrlResolver: string;
+        credentialResolver: string;
+        modelsResolver: string;
+        ownerId?: string;
+        scopeRef?: string;
+    }): Promise<import("./application-operation-port.js").Provider>;
+    upsertProvider(input: Partial<import("./application-operation-port.js").Provider> & {
+        id: string;
+        name: string;
+        kind: string;
+        baseUrlResolver: string;
+        credentialResolver: string;
+        modelsResolver: string;
+        ownerId?: string;
+        scopeRef?: string;
+    }): Promise<import("./application-operation-port.js").Provider>;
+    listCpaInstances(): Promise<import("./application-operation-port.js").CpaInstance[]>;
+    getCpaInstance(id: string): Promise<import("./application-operation-port.js").CpaInstance | undefined>;
+    createCpaInstance(input: {
+        id: string;
+        name: string;
+        status?: "enabled" | "disabled";
+    }): Promise<import("./application-operation-port.js").CpaInstance>;
+    updateCpaInstanceStatus(id: string, status: "enabled" | "disabled"): Promise<import("./application-operation-port.js").CpaInstance | undefined>;
+    listProviderModels(): Promise<import("./application-operation-port.js").ProviderModel[]>;
+    getProviderModel(providerId: string, providerModelName: string): Promise<import("./application-operation-port.js").ProviderModel | undefined>;
+    upsertProviderModel(input: Partial<import("./application-operation-port.js").ProviderModel> & {
+        providerId: string;
+        providerModelName: string;
+        displayName?: string;
+    }): Promise<import("./application-operation-port.js").ProviderModel>;
+    getProviderDeletionState(id: string): Promise<{
+        providerId: string;
+        hasAccessPointReferences: boolean;
+        hasOnlineBillingHistory: boolean;
+        credentialCleared: boolean;
+        retained: boolean;
+    } | null>;
+    deleteProvider(id: string): Promise<boolean>;
+    listAccessPoints(): Promise<import("./application-operation-port.js").AccessPoint[]>;
+    getAccessPoint(id: string): Promise<import("./application-operation-port.js").AccessPoint | undefined>;
+    createAccessPoint(input: {
+        ownerId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        name: string;
+        description?: string | null;
+        apiFamily: string;
+        exposedModel: string;
+        targetModel: string;
+        targetType: import("@frely/core").AccessPointTargetType;
+        targetId?: string | null;
+        targetProviderId?: string | null;
+        targetProviderModelName?: string | null;
+        salePrice?: {
+            inputPer1M: number;
+            cachedInputPer1M: number;
+            cacheWritePer1M?: number | null;
+            outputPer1M: number;
+        } | null;
+        priority?: number;
+        weight?: number;
+        fallbackOrder?: number;
+        status?: string;
+    }): Promise<import("./application-operation-port.js").AccessPoint>;
+    createAccessPointAdmin(input: {
+        ownerId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        name: string;
+        description?: string | null;
+        apiFamily: string;
+        exposedModel: string;
+        targetModel: string;
+        targetType?: import("@frely/core").AccessPointTargetType;
+        targetId?: string | null;
+        targetProviderId?: string | null;
+        targetProviderModelName?: string | null;
+        routing?: {
+            selector: {
+                id: import("@frely/core").AccessPointSelectorId;
+                behaviorVersion: 1;
+                config?: unknown;
+            };
+            requestOverrides?: unknown;
+            targets: Array<{
+                id?: string;
+                type: import("@frely/core").AccessPointTargetType;
+                targetAccessPointId?: string | null;
+                targetProviderId?: string | null;
+                targetProviderModelName?: string | null;
+                position: number;
+                status?: "enabled" | "disabled";
+            }>;
+        };
+        salePrice?: {
+            inputPer1M: number;
+            cachedInputPer1M: number;
+            cacheWritePer1M?: number | null;
+            outputPer1M: number;
+            tiers?: import("./application-operation-port.js").PriceTierInput[];
+        } | null;
+        priority?: number;
+        weight?: number;
+        fallbackOrder?: number;
+        status?: string;
+    }): Promise<import("./application-operation-port.js").AccessPoint>;
+    updateAccessPointAdmin(id: string, input: Parameters<ApplicationOperationPort["updateAccessPoint"]>[1]): Promise<import("./application-operation-port.js").AccessPoint | undefined>;
+    deleteAccessPoint(id: string): Promise<boolean>;
+    getAccessPointWithRouting(id: string): Promise<import("./application-operation-port.js").AccessPointWithRouting | undefined>;
+    accessPointPlanImpact(accessPointId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["accessPointPlanImpact"]>>>;
+    listAccessPointTargets(accessPointId: string, includeDisabled?: boolean): Promise<import("./application-operation-port.js").AccessPointTarget[]>;
+    listAccessPointsVisibleAtScope(scopeRef: string): Promise<import("./application-operation-port.js").AccessPoint[]>;
+    findEnabledProviderModelCost(providerId: string, providerModelName: string): Promise<import("./application-operation-port.js").ProviderModelCost | undefined>;
+    createProviderModelCost(input: {
+        providerId: string;
+        providerModelName: string;
+        inputPer1M: number;
+        cachedInputPer1M: number;
+        cacheWritePer1M?: number | null;
+        outputPer1M: number;
+        source?: string;
+        status?: string;
+        tiers?: import("./application-operation-port.js").PriceTierInput[];
+    }): Promise<import("./application-operation-port.js").ProviderModelCost>;
+    updateProviderModelCostStatus(id: string, status: string): Promise<import("./application-operation-port.js").ProviderModelCost | undefined>;
+    findEnabledAccessPointPrice(accessPointId: string): Promise<import("./application-operation-port.js").AccessPointPrice | undefined>;
+    createAccessPointPrice(input: {
+        accessPointId: string;
+        inputPer1M: number;
+        cachedInputPer1M: number;
+        cacheWritePer1M?: number | null;
+        outputPer1M: number;
+        status?: string;
+        tiers?: import("./application-operation-port.js").PriceTierInput[];
+    }, audit: import("@frely/audit").AuditInput): Promise<import("./application-operation-port.js").AccessPointPrice>;
+    updateAccessPointPriceStatus(id: string, status: string): Promise<import("./application-operation-port.js").AccessPointPrice | undefined>;
+    createPlanAccessPointPrice(input: {
+        planId: string;
+        accessPointId: string;
+        inputPer1M: number;
+        cachedInputPer1M: number;
+        cacheWritePer1M?: number | null;
+        outputPer1M: number;
+        status?: string;
+        tiers?: import("./application-operation-port.js").PriceTierInput[];
+    }): Promise<import("./application-operation-port.js").PlanAccessPointPrice>;
+    updatePlanAccessPointPriceStatus(id: string, status: string): Promise<import("./application-operation-port.js").PlanAccessPointPrice | undefined>;
+    findEffectivePlanAccessPointPrice(planId: string, accessPointId: string): Promise<import("./application-operation-port.js").EffectivePlanAccessPointPrice | undefined>;
+    createBillingEvent(input: Parameters<ApplicationOperationPort["createBillingEvent"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createBillingEvent"]>>>;
+    createBillingAccessPointEdge(input: Parameters<ApplicationOperationPort["createBillingAccessPointEdge"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createBillingAccessPointEdge"]>>>;
+    createBillingProviderCostEvent(input: Parameters<ApplicationOperationPort["createBillingProviderCostEvent"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createBillingProviderCostEvent"]>>>;
+    createBillingEventWithFacts(input: Parameters<ApplicationOperationPort["createBillingEventWithFacts"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createBillingEventWithFacts"]>>>;
+    createBillingEventWithUsageCharge(input: Parameters<ApplicationOperationPort["createBillingEventWithUsageCharge"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createBillingEventWithUsageCharge"]>>>;
+    settleProviderUsage(input: Parameters<ApplicationOperationPort["settleProviderUsage"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["settleProviderUsage"]>>>;
+    backfillPrepaidSellerSettlements(batchSize?: number, lease?: ApplicationTaskLease): Promise<{
+        backfilledPurchases: number;
+        completed: boolean;
+    }>;
+    recordUsageSellerSettlement(billingEvent: Awaited<ReturnType<ApplicationOperationPort["createBillingEvent"]>>, accessPointEdges: Array<Parameters<ApplicationOperationPort["createBillingAccessPointEdge"]>[0]>): Promise<void>;
+    listSellerSettlementEvents(sellerScopeRef?: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["listSellerSettlementEvents"]>>>;
+    sellerSettlementBalance(sellerScopeRef: import("@frely/core").ScopeRef, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["sellerSettlementBalance"]>>>;
+    releaseDueSellerSettlements(at?: string, lease?: ApplicationTaskLease, batchSize?: number): Promise<{
+        selectedWindows: number;
+        deferredWindows: number;
+        releasedWindows: number;
+        releasedUnits: number;
+        ledgerEventIds: string[];
+    }>;
+    findActivePlanSubscriptions(scopeRef: import("@frely/core").ScopeRef, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["findActivePlanSubscriptions"]>>>;
+    listActiveSubscriptionsForUser(userId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listActiveSubscriptionsForUser"]>>>;
+    listPlanSubscriptionBudgetUsage(subscriptionIds: string[], targetUserId?: string | null, at?: string): Promise<import("./application-operation-port.js").PlanBudgetSourceView[]>;
+    listEffectiveUserModelPlanSourceModels(userId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listEffectiveUserModelPlanSourceModels"]>>>;
+    findFirstEffectiveUserModelPlanScopeOrder(userId: string, exposedModel: string): Promise<Awaited<ReturnType<ApplicationOperationPort["findFirstEffectiveUserModelPlanScopeOrder"]>>>;
+    listUserModelPlanScopeOrders(userId: string, exposedModel?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listUserModelPlanScopeOrders"]>>>;
+    replaceUserModelPlanSourceOrder(userId: string, exposedModel: string, orderedPlanScopeIds: string[]): Promise<Awaited<ReturnType<ApplicationOperationPort["replaceUserModelPlanSourceOrder"]>>>;
+    moveUserModelPlanSourceOrder(userId: string, exposedModel: string, orderId: string, placement: "before" | "after", anchorId: string | null): Promise<Awaited<ReturnType<ApplicationOperationPort["moveUserModelPlanSourceOrder"]>>>;
+    pageUserAccessOrder(userId: string, input?: Parameters<ApplicationOperationPort["pageUserAccessOrder"]>[1], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserAccessOrder"]>>>;
+    pageUserAccessOrderModels(userId: string, page?: number, requestedPageSize?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserAccessOrderModels"]>>>;
+    pageUserApiKeyDirectory(userId: string, input?: Parameters<ApplicationOperationPort["pageUserApiKeyDirectory"]>[1], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserApiKeyDirectory"]>>>;
+    getUserApiKeyDetail(userId: string, apiKeyId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getUserApiKeyDetail"]>>>;
+    getUserApiKeyDirectoryMetrics(userId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getUserApiKeyDirectoryMetrics"]>>>;
+    pageUserAvailableModels(userId: string, input?: Parameters<ApplicationOperationPort["pageUserAvailableModels"]>[1], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["pageUserAvailableModels"]>>>;
+    getAgentCatalogRevision(userId: string, at: string, providerBaseUrl: string): Promise<string>;
+    getUserAvailableModelMetrics(userId: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getUserAvailableModelMetrics"]>>>;
+    listPlanBudgetLimitsForPlans(planIds: string[]): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanBudgetLimitsForPlans"]>>>;
+    listPlanBudgetLimits(planId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listPlanBudgetLimits"]>>>;
+    listScopeBudgetPolicyAssignments(scopeRef?: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["listScopeBudgetPolicyAssignments"]>>>;
+    listScopeGovernanceBudgetPolicyAssignments(scopeRef?: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["listScopeGovernanceBudgetPolicyAssignments"]>>>;
+    listScopeRateLimitPolicyAssignments(scopeRef?: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["listScopeRateLimitPolicyAssignments"]>>>;
+    pageOrderedPlanSourcesForUser(userId: string, exposedModel: string, cursor?: Parameters<ApplicationOperationPort["pageOrderedPlanSourcesForUser"]>[2], at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["pageOrderedPlanSourcesForUser"]>>>;
+    findFirstOrderedPlanSourceForUser(userId: string, exposedModel: string, at?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["findFirstOrderedPlanSourceForUser"]>>>;
+    getRequestCaptureSetting(): Promise<import("./application-operation-port.js").RequestCaptureSetting>;
+    setRequestCaptureEnabled(enabled: boolean, updatedBy?: string | null): Promise<import("./application-operation-port.js").RequestCaptureSetting>;
+    getPipelinePluginSetting(pluginId: string, scopeRef: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["getPipelinePluginSetting"]>>>;
+    upsertPipelinePluginSetting(input: {
+        id?: string;
+        pluginId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        enabled: boolean;
+        configJson: string;
+        updatedByUserId?: string | null;
+        now?: string;
+    }): Promise<import("./application-operation-port.js").PipelinePluginSetting>;
+    getIngressPluginSetting(pluginId: string, scopeRef: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["getIngressPluginSetting"]>>>;
+    upsertIngressPluginSetting(input: {
+        id?: string;
+        pluginId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        enabled: boolean;
+        configJson: string;
+        updatedByUserId?: string | null;
+        now?: string;
+    }): Promise<import("./application-operation-port.js").IngressPluginSetting>;
+    isRequestCaptureEnabled(): Promise<boolean>;
+    listPipelinePluginSettings(scopeRefs?: import("@frely/core").ScopeRef[]): Promise<Awaited<ReturnType<ApplicationOperationPort["listPipelinePluginSettings"]>>>;
+    listIngressPluginSettings(scopeRefs?: import("@frely/core").ScopeRef[]): Promise<Awaited<ReturnType<ApplicationOperationPort["listIngressPluginSettings"]>>>;
+    getCreditAccount(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getCreditAccount"]>>>;
+    createCreditAccount(input: Parameters<ApplicationOperationPort["createCreditAccount"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createCreditAccount"]>>>;
+    findCreditAccountForScope(scopeRef: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["findCreditAccountForScope"]>>>;
+    getCreditAccountBalanceUnits(accountId: string): Promise<number>;
+    getCreditAccountBalance(accountId: string): Promise<number>;
+    getCreditProduct(id: string): Promise<import("./application-operation-port.js").CreditProduct | undefined>;
+    getCreditProductListing(id: string): Promise<import("./application-operation-port.js").CreditProductListing | undefined>;
+    getCard(id: string): Promise<import("./application-operation-port.js").Card | undefined>;
+    createCardActivationBatch(input: Parameters<ApplicationOperationPort["createCardActivationBatch"]>[0]): Promise<import("./application-operation-port.js").CardActivationBatch>;
+    exportCardActivationBatch(batchId: string, actorUserId: string, requestId?: string | null): Promise<{
+        batch: import("./application-operation-port.js").CardActivationBatch;
+        codes: Array<{
+            ordinal: number;
+            code: string;
+        }>;
+    }>;
+    listCardActivationBatches(input?: {
+        page?: number;
+        pageSize?: number;
+        cardType?: import("./application-operation-port.js").CardType;
+        status?: import("./application-operation-port.js").CardActivationCodeStatus;
+    }): Promise<{
+        items: Array<import("./application-operation-port.js").CardActivationBatch & {
+            stats: import("./application-operation-port.js").CardActivationStats;
+        }>;
+        page: number;
+        pageSize: number;
+        total: number;
+        totalPages: number;
+    }>;
+    getCardActivationBatchDetail(batchId: string, page?: number, pageSize?: number): Promise<import("./application-operation-port.js").CardActivationBatchDetail | undefined>;
+    getCardActivationStats(input?: {
+        batchId?: string;
+        cardType?: import("./application-operation-port.js").CardType;
+    }): Promise<import("./application-operation-port.js").CardActivationStats>;
+    revokeCardActivationBatch(batchId: string, actorUserId: string, reason: string, requestId?: string | null): Promise<import("./application-operation-port.js").CardActivationBatch>;
+    revokeCardActivationCode(codeId: string, actorUserId: string, reason: string, requestId?: string | null): Promise<import("./application-operation-port.js").CardActivationCode>;
+    previewCardActivationCode(codeHash: string, at?: string): Promise<import("./application-operation-port.js").CardActivationPreview | undefined>;
+    redeemCardActivationCode(codeHash: string, userId: string, context?: {
+        requestId?: string | null;
+    }): Promise<import("./application-operation-port.js").CardActivationRedeemResult>;
+    getFirstEnabledApiKeyForUser(userId: string): Promise<import("./application-operation-port.js").ApiKey | undefined>;
+    listCreditTopupAttachments(topupId: string): Promise<import("./application-operation-port.js").CreditTopupAttachment[]>;
+    createCreditTopupAttachment(input: Omit<import("./application-operation-port.js").CreditTopupAttachment, "id" | "createdAt"> & {
+        id?: string;
+        createdAt?: string;
+    }): Promise<import("./application-operation-port.js").CreditTopupAttachment>;
+    createUserCreditTopup(input: {
+        userId: string;
+        productListingId: string;
+        idempotencyKey: string;
+        useImmediately: boolean;
+    }): Promise<import("./application-operation-port.js").CreditTopup>;
+    submitCreditTopupPaymentReference(input: {
+        topupId: string;
+        userId: string;
+        transactionReference: string;
+        claimedPaidAt?: string | null;
+    }): Promise<import("./application-operation-port.js").CreditTopup>;
+    cancelUserCreditTopup(input: {
+        topupId: string;
+        userId: string;
+    }): Promise<import("./application-operation-port.js").CreditTopup>;
+    approveCreditTopup(input: Parameters<ApplicationOperationPort["approveCreditTopup"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["approveCreditTopup"]>>>;
+    rejectCreditTopup(input: Parameters<ApplicationOperationPort["rejectCreditTopup"]>[0]): Promise<import("./application-operation-port.js").CreditTopup>;
+    reverseCreditTopup(input: Parameters<ApplicationOperationPort["reverseCreditTopup"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["reverseCreditTopup"]>>>;
+    recordCreditTopupRefundNote(input: Parameters<ApplicationOperationPort["recordCreditTopupRefundNote"]>[0]): Promise<import("./application-operation-port.js").CreditTopup>;
+    listCreditLedgerEventsForAccount(accountId: string, limit?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listCreditLedgerEventsForAccount"]>>>;
+    createAdminCreditLedgerEvent(input: Parameters<ApplicationOperationPort["createAdminCreditLedgerEvent"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createAdminCreditLedgerEvent"]>>>;
+    getCreditTransferPolicy(scopeRef: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["getCreditTransferPolicy"]>>>;
+    setCreditTransferPolicy(input: {
+        scopeRef: import("@frely/core").ScopeRef;
+        transferOutEnabled: boolean;
+        updatedBy?: string | null;
+    }): Promise<import("./application-operation-port.js").CreditTransferPolicy>;
+    createCreditProduct(input: {
+        code: string;
+        displayName: string;
+        description?: string | null;
+        adminNote?: string | null;
+        creditedAmountUnits: number;
+        displayOrder?: number;
+    }): Promise<import("./application-operation-port.js").CreditProduct>;
+    disableCreditProduct(id: string): Promise<import("./application-operation-port.js").CreditProduct>;
+    createPaymentChannel(input: {
+        code: string;
+        displayName: string;
+        paymentNetwork: string;
+        paymentAsset: string;
+        settlementMode: string;
+        recipientIdentifierType: string;
+        transactionReferenceType: string;
+        recipientIdentifier: string;
+        recipientIdentifierDisplay: string;
+        paymentInstruction?: string | null;
+        createdByUserId: string;
+    }): Promise<import("./application-operation-port.js").PaymentChannel>;
+    setPaymentChannelStatus(id: string, status: "enabled" | "disabled"): Promise<import("./application-operation-port.js").PaymentChannel>;
+    createCreditProductListing(input: {
+        productId: string;
+        paymentChannelId: string;
+        priceAmountUnits: number;
+    }): Promise<import("./application-operation-port.js").CreditProductListing>;
+    disableCreditProductListing(id: string): Promise<import("./application-operation-port.js").CreditProductListing>;
+    switchCreditProductListingsChannel(input: {
+        sourcePaymentChannelId: string;
+        targetPaymentChannelId: string;
+    }): Promise<import("./application-operation-port.js").CreditProductListing[]>;
+    getPaymentChannel(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getPaymentChannel"]>>>;
+    getPaymentChannelInstructionAttachment(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getPaymentChannelInstructionAttachment"]>>>;
+    listPaymentChannelInstructionAttachments(paymentChannelId: string): Promise<import("./application-operation-port.js").PaymentChannelInstructionAttachment[]>;
+    createPaymentChannelInstructionAttachment(input: Omit<import("./application-operation-port.js").PaymentChannelInstructionAttachment, "id" | "createdAt"> & {
+        id?: string;
+        createdAt?: string;
+    }): Promise<import("./application-operation-port.js").PaymentChannelInstructionAttachment>;
+    isEnabledPaymentChannelListed(channelId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["isEnabledPaymentChannelListed"]>>>;
+    getCreditTopup(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getCreditTopup"]>>>;
+    attachStripeCheckoutSession(input: {
+        topupId: string;
+        checkoutSessionId: string;
+    }): Promise<import("./application-operation-port.js").CreditTopup>;
+    recordStripeCreditTopupTerminal(input: {
+        topupId: string;
+        checkoutSessionId: string;
+        status: "payment_failed" | "expired";
+        webhookEvent: {
+            eventId: string;
+            eventType: string;
+            livemode: boolean;
+        };
+    }): Promise<import("./application-operation-port.js").CreditTopup>;
+    getStripeWebhookEvent(eventId: string): Promise<import("./application-operation-port.js").StripeWebhookEvent | undefined>;
+    recordStripeWebhookIgnored(input: {
+        eventId: string;
+        eventType: string;
+        livemode: boolean;
+        checkoutSessionId?: string | null;
+        topupId?: string | null;
+        planPurchaseOrderId?: string | null;
+        reason: string;
+    }): Promise<import("./application-operation-port.js").StripeWebhookEvent>;
+    recordStripeWebhookFailure(input: {
+        eventId: string;
+        eventType: string;
+        livemode: boolean;
+        checkoutSessionId?: string | null;
+        topupId?: string | null;
+        planPurchaseOrderId?: string | null;
+        errorCode: string;
+    }): Promise<import("./application-operation-port.js").StripeWebhookEvent>;
+    completeStripeCreditTopup(input: {
+        topupId: string;
+        checkoutSessionId: string;
+        paymentIntentId: string | null;
+        amountUnits: number;
+        currency: string;
+        webhookEvent?: {
+            eventId: string;
+            eventType: string;
+            livemode: boolean;
+        };
+    }): Promise<{
+        topup: import("./application-operation-port.js").CreditTopup;
+        card: import("./application-operation-port.js").Card | null;
+        ledgerEvent: import("./application-operation-port.js").CreditLedgerEvent | null;
+        account: import("./application-operation-port.js").CreditAccount | null;
+        replayed: boolean;
+    }>;
+    createCreditLedgerEvent(input: Omit<import("./application-operation-port.js").CreditLedgerEvent, "id" | "createdAt" | "relatedTopupId" | "cardId" | "authorityPurchaseId"> & {
+        id?: string;
+        createdAt?: string;
+        relatedTopupId?: string | null;
+        cardId?: string | null;
+        authorityPurchaseId?: string | null;
+        allowNegativeBalance?: boolean;
+    }): Promise<import("./application-operation-port.js").CreditLedgerEvent>;
+    transferCredit(input: {
+        fromAccountId: string;
+        toAccountId: string;
+        amountUnits: number;
+        actorUserId: string;
+        reason?: string | null;
+        transferId?: string;
+    }): Promise<{
+        outEvent: import("./application-operation-port.js").CreditLedgerEvent;
+        inEvent: import("./application-operation-port.js").CreditLedgerEvent;
+    }>;
+    createCard(input: {
+        cardType: "plan" | "credit";
+        issuanceType?: import("./application-operation-port.js").CardIssuanceType;
+        ownerUserId: string;
+        planId?: string | null;
+        creditProductId?: string | null;
+        creditAmountUnits?: number | null;
+        replacesCardId?: string | null;
+        id?: string;
+        createdAt?: string;
+        expiresAt?: string;
+    }): Promise<import("./application-operation-port.js").Card>;
+    grantAdminCard(input: Parameters<ApplicationOperationPort["grantAdminCard"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["grantAdminCard"]>>>;
+    createAdminGrantBatch(input: Parameters<ApplicationOperationPort["createAdminGrantBatch"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createAdminGrantBatch"]>>>;
+    sendCard(input: {
+        cardId: string;
+        fromUserId: string;
+        toUserId: string;
+        referenceCode?: string | null;
+        note?: string | null;
+    }): Promise<import("./application-operation-port.js").Card>;
+    createPlanSubscription(input: Partial<import("./application-operation-port.js").PlanSubscription> & {
+        planId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        effectiveStart?: string;
+        effectiveEnd?: string | null;
+        allowClosedPlan?: boolean;
+    }): Promise<import("./application-operation-port.js").PlanSubscription>;
+    updatePlanSubscription(id: string, input: Partial<Omit<import("./application-operation-port.js").PlanSubscription, "id" | "createdAt" | "updatedAt">>): Promise<import("./application-operation-port.js").PlanSubscription | undefined>;
+    deletePlanSubscription(id: string): Promise<boolean>;
+    cancelPlanSubscription(id: string, effectiveEnd?: string): Promise<import("./application-operation-port.js").PlanSubscription | undefined>;
+    createPlanSubscriptionUnits(input: {
+        planId: string;
+        scopeRef: import("@frely/core").ScopeRef;
+        units: number;
+        source?: string;
+        purchasedByUserId?: string | null;
+        fundingAccountId?: string | null;
+        paymentAccountId?: string | null;
+        chargePurchaseAmount?: boolean;
+        effectiveStart?: string;
+        priority?: number;
+    }): Promise<{
+        subscriptions: import("./application-operation-port.js").PlanSubscription[];
+        ledgerEvents: import("./application-operation-port.js").CreditLedgerEvent[];
+    }>;
+    useCard(input: {
+        cardId: string;
+        ownerUserId: string;
+    }): Promise<import("./application-operation-port.js").CardUseResult>;
+    getPlanPaymentListing(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getPlanPaymentListing"]>>>;
+    pagePlanPaymentListings(filter?: Parameters<ApplicationOperationPort["pagePlanPaymentListings"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanPaymentListings"]>>>;
+    createPlanPaymentListing(input: Parameters<ApplicationOperationPort["createPlanPaymentListing"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["createPlanPaymentListing"]>>>;
+    disablePlanPaymentListing(id: string): Promise<Awaited<ReturnType<ApplicationOperationPort["disablePlanPaymentListing"]>>>;
+    getPlanPurchaseOrder(id: string): Promise<import("./application-operation-port.js").PlanPurchaseOrder | undefined>;
+    getPlanPurchaseOrderForUser(id: string, buyerUserId: string): Promise<import("./application-operation-port.js").PlanPurchaseOrder | undefined>;
+    pagePlanPurchaseOrders(filter?: Parameters<ApplicationOperationPort["pagePlanPurchaseOrders"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["pagePlanPurchaseOrders"]>>>;
+    createPlanPurchaseOrder(input: Parameters<ApplicationOperationPort["createPlanPurchaseOrder"]>[0]): Promise<import("./application-operation-port.js").PlanPurchaseResult>;
+    attachStripePlanCheckoutSession(input: {
+        orderId: string;
+        checkoutSessionId: string;
+    }): Promise<import("./application-operation-port.js").PlanPurchaseOrder>;
+    cancelUserPlanPurchaseOrder(input: {
+        orderId: string;
+        buyerUserId: string;
+    }): Promise<import("./application-operation-port.js").PlanPurchaseOrder>;
+    reversePlanPurchaseOrder(input: Parameters<ApplicationOperationPort["reversePlanPurchaseOrder"]>[0]): Promise<import("./application-operation-port.js").PlanPurchaseResult>;
+    recordStripePlanPurchaseTerminal(input: {
+        orderId: string;
+        checkoutSessionId: string;
+        status: "payment_failed" | "expired";
+        webhookEvent: {
+            eventId: string;
+            eventType: string;
+            livemode: boolean;
+        };
+    }): Promise<import("./application-operation-port.js").PlanPurchaseOrder>;
+    completeStripePlanPurchaseOrder(input: {
+        orderId: string;
+        checkoutSessionId: string;
+        paymentIntentId: string | null;
+        amountMinor: number;
+        currency: string;
+        webhookEvent: {
+            eventId: string;
+            eventType: string;
+            livemode: boolean;
+        };
+    }): Promise<import("./application-operation-port.js").PlanPurchaseResult>;
+    purchasePlanCard(input: {
+        planId: string;
+        buyerUserId: string;
+        useImmediately: boolean;
+    }): Promise<{
+        card: import("./application-operation-port.js").Card;
+        ledgerEvent: import("./application-operation-port.js").CreditLedgerEvent;
+        subscription: import("./application-operation-port.js").PlanSubscription | null;
+    }>;
+    getTopupAttachment(topupId: string, attachmentId: string, userId?: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getTopupAttachment"]>>>;
+    pageTopupAttachments(topupId: string, input?: {
+        userId?: string;
+        purpose?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<Awaited<ReturnType<ApplicationOperationPort["pageTopupAttachments"]>>>;
+    isCreditTransferOutEnabled(scopeRef: import("@frely/core").ScopeRef): Promise<boolean>;
+    usageSummary(input?: Parameters<ApplicationOperationPort["usageSummary"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["usageSummary"]>>>;
+    pageUsageLogs(page?: number, requestedPageSize?: number): Promise<import("./queries/pagination.js").PageResult<import("./queries/usage.js").UsageLogRow>>;
+    pageAuditLogs(input?: import("./queries/audit-logs.js").AuditLogDirectoryInput): Promise<import("./queries/pagination.js").PageResult<import("./queries/audit-logs.js").AuditLogDirectoryRow>>;
+    ownerProfitSummary(scopeRef: import("@frely/core").ScopeRef): Promise<Awaited<ReturnType<ApplicationOperationPort["ownerProfitSummary"]>>>;
+    usageForSubscription(subscriptionId: string, start: string, end: string): Promise<Awaited<ReturnType<ApplicationOperationPort["usageForSubscription"]>>>;
+    usageForSubscriptionUser(subscriptionId: string, userId: string, start: string, end: string): Promise<Awaited<ReturnType<ApplicationOperationPort["usageForSubscriptionUser"]>>>;
+    usageForScope(scopeRef: import("@frely/core").ScopeRef, start: string, end: string): Promise<Awaited<ReturnType<ApplicationOperationPort["usageForScope"]>>>;
+    latestRequestStartedAtForUser(userId: string): Promise<string | null>;
+    latestRequestStartedAtForApiKey(apiKeyId: string): Promise<string | null>;
+    countRequestLogs(filter?: import("./application-operation-port.js").RequestLogListFilter): Promise<number>;
+    listRecentRequestLogs(filter?: import("./application-operation-port.js").RequestLogListFilter, limit?: number, offset?: number): Promise<import("./application-operation-port.js").RequestLog[]>;
+    listRecentRequestLogsForUser(userId: string, filter?: Omit<import("./application-operation-port.js").RequestLogListFilter, "userId">, limit?: number, offset?: number): Promise<import("./application-operation-port.js").RequestLog[]>;
+    listRequestLogModels(): Promise<string[]>;
+    getRequestLog(id: string): Promise<import("./application-operation-port.js").RequestLog | undefined>;
+    getRequestLogForUser(id: string, userId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getRequestLogForUser"]>>>;
+    acquireRequestCaptureDownloadSlot(): Promise<Awaited<ReturnType<ApplicationOperationPort["acquireRequestCaptureDownloadSlot"]>>>;
+    releaseRequestCaptureDownloadSlot(slot: Parameters<ApplicationOperationPort["releaseRequestCaptureDownloadSlot"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["releaseRequestCaptureDownloadSlot"]>>>;
+    getVerifiedRequestLogArchiveForMonth(archiveMonth: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getVerifiedRequestLogArchiveForMonth"]>>>;
+    getRequestLogArchiveEntry(requestId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getRequestLogArchiveEntry"]>>>;
+    getRequestLogArchiveEntryForUser(requestId: string, userId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["getRequestLogArchiveEntryForUser"]>>>;
+    listRequestLogArchiveEntries(filter?: Parameters<ApplicationOperationPort["listRequestLogArchiveEntries"]>[0], limit?: number): Promise<Awaited<ReturnType<ApplicationOperationPort["listRequestLogArchiveEntries"]>>>;
+    createRequestLog(input: Parameters<ApplicationOperationPort["createRequestLog"]>[0]): Promise<import("./application-operation-port.js").RequestLog>;
+    acquireRequestExecutionLease(input: Parameters<ApplicationOperationPort["acquireRequestExecutionLease"]>[0]): Promise<import("./application-operation-port.js").RequestExecutionLease>;
+    renewRequestExecutionLease(input: Parameters<ApplicationOperationPort["renewRequestExecutionLease"]>[0]): Promise<import("./application-operation-port.js").RequestExecutionLease>;
+    releaseRequestExecutionLease(input: Parameters<ApplicationOperationPort["releaseRequestExecutionLease"]>[0]): Promise<boolean>;
+    getRequestExecutionLease(requestId: string): Promise<import("./application-operation-port.js").RequestExecutionLease | null>;
+    listRequestProviderAttempts(requestId: string): Promise<Awaited<ReturnType<ApplicationOperationPort["listRequestProviderAttempts"]>>>;
+    finalizeRequestPipelineSnapshot(id: string, snapshot: Parameters<ApplicationOperationPort["finalizeRequestPipelineSnapshot"]>[1]): Promise<import("./application-operation-port.js").RequestLog>;
+    enrichRequestLogResolution(id: string, fields: Parameters<ApplicationOperationPort["enrichRequestLogResolution"]>[1]): Promise<import("./application-operation-port.js").RequestLog>;
+    finishRequestLog(id: string, status: string, errorCode?: string | null, failureReason?: import("@frely/core").ProviderCredentialFailureReason | null): Promise<void>;
+    listPlanDefinitions(): Promise<import("./application-operation-port.js").PlanDefinition[]>;
+    getPlan(id: string): Promise<import("./application-operation-port.js").PlanDefinition | undefined>;
+    isPlanVisibleToUser(plan: import("./application-operation-port.js").PlanDefinition, userId: string): Promise<boolean>;
+    createPlanDefinition(input: Parameters<import("./async-application-operation-port.js").AsyncApplicationOperationPort["createPlanDefinition"]>[0]): Promise<import("./application-operation-port.js").PlanDefinition>;
+    createPlanTemplate(input: Parameters<ApplicationOperationPort["createPlanTemplate"]>[0]): Promise<import("./application-operation-port.js").PlanTemplate>;
+    updatePlanTemplate(id: string, input: Parameters<ApplicationOperationPort["updatePlanTemplate"]>[1]): Promise<import("./application-operation-port.js").PlanTemplate | undefined>;
+    deletePlanTemplate(id: string): Promise<boolean>;
+    replaceAvailablePlanCards(input: Parameters<ApplicationOperationPort["replaceAvailablePlanCards"]>[0]): Promise<Awaited<ReturnType<ApplicationOperationPort["replaceAvailablePlanCards"]>>>;
+    getPlanRelationSummary(planId: string): Promise<{
+        accessPointCount: number;
+        budgetLimitCount: number;
+        subscriptionBudgetLimitCount: number;
+        userBudgetLimitCount: number;
+        tokenBudgetLimitCount: number;
+        amountBudgetLimitCount: number;
+    }>;
+    upsertResourcePermission(input: Parameters<ApplicationOperationPort["upsertResourcePermission"]>[0]): Promise<import("./application-operation-port.js").ResourcePermission>;
+}

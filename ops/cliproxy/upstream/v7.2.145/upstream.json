@@ -1,0 +1,11 @@
+{
+  "schema": "friday-relay.cpa-upstream.v1",
+  "repository": "https://github.com/router-for-me/CLIProxyAPI",
+  "tag": "v7.2.145",
+  "commit": "d9cea8904b14fbbebb77ef26e98ef08f6b48a724",
+  "buildDate": "2026-08-28T09:30:55Z",
+  "sourceArchive": "CLIProxyAPI-v7.2.145.tar.gz",
+  "sourceArchiveSha256": "0a6015ae9511f6e10307ef3cea1bf86b703f418ba74182e523639c9871af0eae",
+  "officialOciManifest": "eceasy/cli-proxy-api:v7.2.145@sha256:b90fcd2282e8b8da9ee05d531fb92e5215ac8340722f8842adb47bb7120226fd",
+  "adaptation": "friday-evidence-v1"
+}

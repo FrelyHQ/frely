@@ -1,0 +1,31 @@
+{
+  "name": "@frely/auth",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./password-policy": {
+      "types": "./dist/password-policy.d.ts",
+      "import": "./dist/password-policy.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/config": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@simplewebauthn/server": "13.3.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

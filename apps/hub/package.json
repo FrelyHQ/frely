@@ -1,0 +1,30 @@
+{
+  "name": "@frely/hub",
+  "version": "0.64.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/core": "workspace:*",
+    "llm-bridge": "^2.0.1",
+    "proxy-agent": "^8.0.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {},
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

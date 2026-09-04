@@ -1,0 +1,76 @@
+apiVersion: v1alpha1
+kind: Installation
+metadata:
+  name: friday-relay-signoz
+spec:
+  deployment:
+    flavor: compose
+    mode: docker
+  signoz:
+    spec:
+      image: signoz/signoz:v0.131.0
+  patches:
+    - target: deployment/compose.yaml
+      operations:
+        - op: add
+          path: /services/friday-relay-otel-gateway
+          value:
+            image: otel/opentelemetry-collector-contrib:0.139.0
+            restart: unless-stopped
+            mem_limit: 512M
+            cpus: "0.75"
+            pids_limit: 256
+            command: ["--config=/etc/otelcol-contrib/config.yaml"]
+            ports:
+              - "${FRIDAY_OBSERVABILITY_OTLP_BIND_ADDRESS:-127.0.0.1}:10003:4318"
+            volumes:
+              - "../../collector.yaml:/etc/otelcol-contrib/config.yaml:ro"
+            read_only: true
+            tmpfs:
+              - "/tmp:size=16m,mode=1777"
+            cap_drop: [ALL]
+            security_opt: ["no-new-privileges:true"]
+            depends_on:
+              ingester:
+                condition: service_started
+            logging:
+              driver: json-file
+              options:
+                max-size: "20m"
+                max-file: "5"
+            healthcheck:
+              test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otelcol-contrib/config.yaml"]
+              interval: 30s
+              timeout: 5s
+              retries: 3
+              start_period: 10s
+        - { op: add, path: /services/ingester/mem_limit, value: 1G }
+        - { op: add, path: /services/ingester/cpus, value: "1.0" }
+        - { op: add, path: /services/ingester/pids_limit, value: 256 }
+        - { op: add, path: /services/ingester/restart, value: unless-stopped }
+        - { op: replace, path: /services/ingester/ports, value: ["127.0.0.1:10001:4317", "127.0.0.1:10002:4318"] }
+        - { op: add, path: /services/signoz-metastore-postgres-0/mem_limit, value: 512M }
+        - { op: add, path: /services/signoz-metastore-postgres-0/cpus, value: "0.5" }
+        - { op: add, path: /services/signoz-metastore-postgres-0/pids_limit, value: 256 }
+        - { op: add, path: /services/signoz-metastore-postgres-0/restart, value: unless-stopped }
+        - { op: add, path: /services/signoz-signoz-0/mem_limit, value: 1G }
+        - { op: add, path: /services/signoz-signoz-0/cpus, value: "1.0" }
+        - { op: add, path: /services/signoz-signoz-0/pids_limit, value: 256 }
+        - { op: add, path: /services/signoz-signoz-0/restart, value: unless-stopped }
+        - { op: replace, path: /services/signoz-signoz-0/ports, value: ["127.0.0.1:10000:8080"] }
+        - { op: add, path: /services/signoz-telemetrykeeper-clickhousekeeper-0/mem_limit, value: 512M }
+        - { op: add, path: /services/signoz-telemetrykeeper-clickhousekeeper-0/cpus, value: "0.5" }
+        - { op: add, path: /services/signoz-telemetrykeeper-clickhousekeeper-0/pids_limit, value: 256 }
+        - { op: add, path: /services/signoz-telemetrykeeper-clickhousekeeper-0/restart, value: unless-stopped }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-0-0/mem_limit, value: 4G }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-0-0/cpus, value: "2.0" }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-0-0/pids_limit, value: 512 }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-0-0/restart, value: unless-stopped }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-user-scripts/mem_limit, value: 256M }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-user-scripts/cpus, value: "0.25" }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-user-scripts/pids_limit, value: 128 }
+        - { op: add, path: /services/signoz-telemetrystore-clickhouse-user-scripts/restart, value: "no" }
+        - { op: add, path: /services/signoz-telemetrystore-migrator/mem_limit, value: 512M }
+        - { op: add, path: /services/signoz-telemetrystore-migrator/cpus, value: "0.5" }
+        - { op: add, path: /services/signoz-telemetrystore-migrator/pids_limit, value: 128 }
+        - { op: add, path: /services/signoz-telemetrystore-migrator/restart, value: "no" }

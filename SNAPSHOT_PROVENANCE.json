@@ -1,0 +1,10 @@
+{
+  "schema": "frely-network.review-snapshot.v1",
+  "repository": "FrelyHQ/frely",
+  "sourceProject": "Frely",
+  "sourceCommit": "b8a8da640c2a3e76ddcd4f63a7741006024c01b2",
+  "sourceVersion": "0.64.1",
+  "exportProfile": "review-minimal",
+  "license": "Apache-2.0",
+  "exportMethod": "git archive whitelist plus deterministic generated overlays"
+}

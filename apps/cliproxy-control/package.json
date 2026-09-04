@@ -1,0 +1,20 @@
+{
+  "name": "@frely/cliproxy-control",
+  "version": "0.64.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/core": "workspace:*",
+    "@frely/providers": "workspace:*"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

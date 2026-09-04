@@ -1,0 +1,15 @@
+{
+  "manifest": {
+    "/page": "app/page.js",
+    "/_not-found/page": "app/_not-found/page.js",
+    "/owner/teams/page": "app/owner/teams/page.js",
+    "/owner/teams/[teamId]/page": "app/owner/teams/[teamId]/page.js",
+    "/api/telemetry/browser/route": "app/api/telemetry/browser/route.js",
+    "/owner/teams/layout": "app/owner/teams/layout.js"
+  },
+  "expectedUiRoutes": [
+    "/",
+    "/owner/teams",
+    "/owner/teams/[teamId]"
+  ]
+}

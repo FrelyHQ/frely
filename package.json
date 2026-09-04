@@ -1,0 +1,88 @@
+{
+  "name": "frely-relay-snapshot",
+  "version": "0.64.1",
+  "private": true,
+  "packageManager": "bun@1.4.0",
+  "engines": {
+    "node": ">=24 <25",
+    "bun": ">=1.4.0 <1.5"
+  },
+  "scripts": {
+    "verify:review": "bun scripts/verify-review-snapshot.mjs",
+    "test:review": "bun scripts/run-review-tests.mjs",
+    "prepare:links": "bun scripts/ensure-bun-root-links.mjs",
+    "prepare:generated": "bun run --filter @frely/postgres prisma:generate",
+    "typecheck": "bun run prepare:links && bun run prepare:generated && bun scripts/run-workspaces.mjs --script typecheck --concurrency 1",
+    "build": "bun run prepare:links && bun scripts/run-workspaces.mjs --script build --concurrency 1",
+    "test": "bun run test:review"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^6.10.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
+    "@tanstack/react-router": "1.170.32",
+    "@tanstack/react-start": "1.168.49",
+    "@tanstack/router-plugin": "1.168.35",
+    "@vitejs/plugin-react": "6.1.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "acorn": "8.15.0",
+    "jsdom": "^29.1.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "srvx": "0.12.7",
+    "tailwindcss": "^4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "^3.2.7",
+    "ws": "^8.21.3",
+    "yaml": "2.9.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "@esbuild-kit/core-utils>esbuild": "0.25.12",
+    "@hono/node-server@<2.0.5": "^2.0.5",
+    "brace-expansion@<=5.0.8": "5.0.9",
+    "dompurify@<=3.4.12": "3.4.13",
+    "@prisma/config>deepmerge-ts": "8.0.0",
+    "hono@<4.12.34": "4.12.34",
+    "mysql2": "3.22.0",
+    "ip-address@<=10.3.0": "10.3.1",
+    "js-yaml@<4.3.1": "4.3.1",
+    "mysql2@<3.22.0": "3.22.0",
+    "nanoid@<3.3.18": "3.3.18",
+    "postcss": "8.5.23",
+    "sharp": "0.35.3",
+    "shell-quote": "1.10.0",
+    "tar": "7.5.22",
+    "undici@>=7.0.0 <7.29.0": "7.29.0",
+    "undici@>=8.0.0 <8.9.0": "8.9.0",
+    "vite>esbuild": "0.28.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "trustedDependencies": [
+    "@google/genai",
+    "@prisma/engines",
+    "esbuild",
+    "prisma",
+    "protobufjs",
+    "sharp",
+    "unrs-resolver"
+  ],
+  "patchedDependencies": {
+    "@tanstack/start-server-core@1.169.31": "patches/@tanstack%2Fstart-server-core@1.169.31.patch"
+  },
+  "license": "Apache-2.0",
+  "description": "Frely relay source snapshot for Frely Network hackathon review",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

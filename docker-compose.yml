@@ -1,0 +1,407 @@
+x-runtime-logging: &runtime-logging
+  driver: json-file
+  options:
+    max-size: "${FRIDAY_RELAY_LOG_MAX_SIZE:-20m}"
+    max-file: "${FRIDAY_RELAY_LOG_MAX_FILE:-5}"
+
+services:
+  cliproxy-egress:
+    image: ${FRIDAY_RELAY_CLIPROXY_EGRESS_IMAGE:-friday-relay-cliproxy-egress:latest}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_CLIPROXY_EGRESS_MEMORY_LIMIT:-256m}
+    cpus: "${FRIDAY_RELAY_CLIPROXY_EGRESS_CPU_LIMIT:-0.25}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cliproxy-egress-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    expose:
+      - "8318"
+    environment:
+      PORT: "8318"
+      CLIPROXY_EGRESS_ALLOWED_PORTS: ${CLIPROXY_EGRESS_ALLOWED_PORTS:-80,443}
+      CLIPROXY_EGRESS_PRIVATE_PROVIDER_ORIGIN: ${FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN:-}
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:8318/healthz').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+      start_interval: 1s
+    networks:
+      - cliproxy-public
+      - cliproxy-egress-hop
+
+  cli-proxy-api:
+    image: ${FRIDAY_RELAY_CLIPROXY_API_IMAGE:-friday-relay-cli-proxy-api:latest}
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cli-proxy-api-runtime
+    mem_limit: ${FRIDAY_RELAY_CLIPROXY_API_MEMORY_LIMIT:-768m}
+    cpus: "${FRIDAY_RELAY_CLIPROXY_API_CPU_LIMIT:-1.0}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    entrypoint: ["/bin/sh", "/etc/cliproxy/entrypoint.sh"]
+    expose:
+      - "8317"
+    volumes:
+      - ./ops/cliproxy/config.yaml:/etc/cliproxy/config.yaml:ro
+      - ./ops/cliproxy/entrypoint.sh:/etc/cliproxy/entrypoint.sh:ro
+      - cliproxy-auth:/root/.cli-proxy-api
+      - cliproxy-logs:/run/cliproxy/logs
+    environment:
+      CLIPROXY_API_KEY: ${CLIPROXY_API_KEY:?CLIPROXY_API_KEY is required}
+      MANAGEMENT_PASSWORD: ${CLIPROXY_MANAGEMENT_API_KEY:?CLIPROXY_MANAGEMENT_API_KEY is required}
+      WRITABLE_PATH: /run/cliproxy
+      HTTP_PROXY: http://cliproxy-egress:8318
+      HTTPS_PROXY: http://cliproxy-egress:8318
+      ALL_PROXY: http://cliproxy-egress:8318
+      NO_PROXY: 127.0.0.1,localhost
+    read_only: true
+    tmpfs:
+      - /run/cliproxy:size=1m,mode=0700
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      cliproxy-egress:
+        condition: service_healthy
+    networks:
+      - cliproxy-inference
+      - cliproxy-management
+      - cliproxy-egress-hop
+
+  cliproxy-control:
+    image: ${FRIDAY_RELAY_CLIPROXY_CONTROL_IMAGE:-friday-relay-cliproxy-control:latest}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_CLIPROXY_CONTROL_MEMORY_LIMIT:-384m}
+    cpus: "${FRIDAY_RELAY_CLIPROXY_CONTROL_CPU_LIMIT:-0.5}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cliproxy-control-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    expose:
+      - "8319"
+    volumes:
+      - cliproxy-credentials:/var/lib/cliproxy-control
+    environment:
+      PORT: "8319"
+      CLIPROXY_BASE_URL: http://cli-proxy-api:8317
+      CLIPROXY_API_KEY: ${CLIPROXY_API_KEY:?CLIPROXY_API_KEY is required}
+      CLIPROXY_MANAGEMENT_API_KEY: ${CLIPROXY_MANAGEMENT_API_KEY:?CLIPROXY_MANAGEMENT_API_KEY is required}
+      CLIPROXY_CONTROL_API_KEY: ${CLIPROXY_CONTROL_API_KEY:?CLIPROXY_CONTROL_API_KEY is required}
+      CLIPROXY_CONTROL_PRIVATE_PROVIDER_ORIGIN: ${FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN:-}
+      CLIPROXY_OAUTH_SESSION_TTL_MS: ${CLIPROXY_OAUTH_SESSION_TTL_MS:-600000}
+      CLIPROXY_CREDENTIAL_STORE_KEY: ${CLIPROXY_CREDENTIAL_STORE_KEY:?CLIPROXY_CREDENTIAL_STORE_KEY is required}
+      CLIPROXY_CREDENTIAL_STORE_PATH: /var/lib/cliproxy-control/credentials.v1.enc
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:8319/healthz').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+      start_interval: 1s
+    depends_on:
+      cli-proxy-api:
+        condition: service_started
+    networks:
+      - cliproxy-control
+      - cliproxy-management
+
+  gateway-srv:
+    image: ${FRIDAY_RELAY_GATEWAY_IMAGE:-friday-relay-gateway:latest}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_GATEWAY_MEMORY_LIMIT:-1536m}
+    cpus: "${FRIDAY_RELAY_GATEWAY_CPU_LIMIT:-2.0}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gateway-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    ports:
+      - "127.0.0.1:${FRIDAY_RELAY_GATEWAY_PUBLISHED_PORT:-43000}:43000"
+    volumes:
+      - ${FRIDAY_RELAY_DATA_DIR:-./data}:/app/data
+      - ${FRIDAY_RELAY_CAPTURE_ROOT_HOST_DIR:-./data/archives/capture-v3}:/app/data/archives/capture-v3
+      - ${FRIDAY_RELAY_CONFIG_FILE:-./data/friday-relay.config.json}:/app/data/friday-relay.config.json:ro
+      - ${FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE:?FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE is required}:/run/secrets/friday-relay-pg-connection-string:ro
+    environment:
+      NODE_ENV: production
+      FRIDAY_RELAY_GATEWAY_MODE: ${FRIDAY_RELAY_GATEWAY_MODE:-core}
+      FRIDAY_RELAY_CONFIG: /app/data/friday-relay.config.json
+      FRIDAY_RELAY_SECRET_KEY: ${FRIDAY_RELAY_SECRET_KEY:?FRIDAY_RELAY_SECRET_KEY is required}
+      FRIDAY_RELAY_PG_CONNECTION_STRING_FILE: /run/secrets/friday-relay-pg-connection-string
+      FRIDAY_RELAY_PG_APPLICATION_NAME: friday-relay-${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-local}-gateway
+      FRIDAY_RELAY_PG_POOL_MAX: ${FRIDAY_RELAY_PG_GATEWAY_POOL_MAX:-10}
+      CLIPROXY_BASE_URL: ${CLIPROXY_BASE_URL:-http://cli-proxy-api:8317}
+      CLIPROXY_API_KEY: ${CLIPROXY_API_KEY:?CLIPROXY_API_KEY is required}
+      CLIPROXY_CONTROL_BASE_URL: ${CLIPROXY_CONTROL_BASE_URL:-http://cliproxy-control:8319}
+      CLIPROXY_CONTROL_API_KEY: ${CLIPROXY_CONTROL_API_KEY:?CLIPROXY_CONTROL_API_KEY is required}
+      FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT: ${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-local}
+      FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-dev}
+      FRIDAY_RELAY_RUNTIME_FINGERPRINT: ${FRIDAY_RELAY_GATEWAY_RUNTIME_FINGERPRINT:-unknown}
+      FRIDAY_RELAY_PRODUCTION_SHADOW_RISK_GUARD: ${FRIDAY_RELAY_PRODUCTION_SHADOW_RISK_GUARD:-disabled}
+      FRIDAY_RELAY_PRODUCTION_SHADOW_MAX_RESERVED_CREDIT_UNITS: ${FRIDAY_RELAY_PRODUCTION_SHADOW_MAX_RESERVED_CREDIT_UNITS:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${FRIDAY_RELAY_OTEL_APPLICATION_ENDPOINT:-${FRIDAY_RELAY_OTEL_EXPORTER_OTLP_ENDPOINT:-}}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_TIMEOUT: "3000"
+      OTEL_METRIC_EXPORT_INTERVAL: "15000"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "require('node:http').get({ hostname: '127.0.0.1', port: 43000, path: '/health', headers: { host: 'gateway-srv' } }, (response) => { response.resume(); if (response.statusCode !== 200) process.exit(1); }).on('error', () => process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 1s
+    depends_on:
+      cliproxy-control:
+        condition: service_healthy
+    networks:
+      - default
+      - cliproxy-inference
+      - cliproxy-control
+
+  web:
+    image: ${FRIDAY_RELAY_WEB_IMAGE:-friday-relay-web:latest}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_WEB_MEMORY_LIMIT:-512m}
+    cpus: "${FRIDAY_RELAY_WEB_CPU_LIMIT:-0.75}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    ports:
+      - "127.0.0.1:${FRIDAY_RELAY_WEB_PUBLISHED_PORT:-43001}:43001"
+    volumes:
+      - ${FRIDAY_RELAY_DATA_DIR:-./data}:/app/data
+      - ${FRIDAY_RELAY_CAPTURE_ROOT_HOST_DIR:-./data/archives/capture-v3}:/app/data/archives/capture-v3
+      - ${FRIDAY_RELAY_CONFIG_FILE:-./data/friday-relay.config.json}:/app/data/friday-relay.config.json:ro
+      - ${FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE:?FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE is required}:/run/secrets/friday-relay-pg-connection-string:ro
+    environment:
+      NODE_ENV: production
+      PORT: "43001"
+      HOSTNAME: 0.0.0.0
+      FRIDAY_RELAY_CONFIG: /app/data/friday-relay.config.json
+      FRIDAY_RELAY_SECRET_KEY: ${FRIDAY_RELAY_SECRET_KEY:?FRIDAY_RELAY_SECRET_KEY is required}
+      FRIDAY_RELAY_PG_CONNECTION_STRING_FILE: /run/secrets/friday-relay-pg-connection-string
+      FRIDAY_RELAY_PG_APPLICATION_NAME: friday-relay-${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-llm}-web
+      FRIDAY_RELAY_PG_POOL_MAX: ${FRIDAY_RELAY_PG_WEB_POOL_MAX:-6}
+      FRIDAY_RELAY_GATEWAY_INTERNAL_BASE_URL: ${FRIDAY_RELAY_GATEWAY_INTERNAL_BASE_URL:-http://gateway-srv:43000}
+      FRIDAY_RELAY_CLARITY_PROJECT_ID: ${FRIDAY_RELAY_CLARITY_PROJECT_ID:-}
+      FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT: ${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-llm}
+      FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-dev}
+      FRIDAY_RELAY_RUNTIME_FINGERPRINT: ${FRIDAY_RELAY_WEB_RUNTIME_FINGERPRINT:-unknown}
+      FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO: ${FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO:-0.05}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${FRIDAY_RELAY_OTEL_APPLICATION_ENDPOINT:-${FRIDAY_RELAY_OTEL_EXPORTER_OTLP_ENDPOINT:-}}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_TIMEOUT: "3000"
+      OTEL_METRIC_EXPORT_INTERVAL: "15000"
+      OTEL_TRACES_SAMPLER: parentbased_traceidratio
+      OTEL_TRACES_SAMPLER_ARG: ${FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO:-0.05}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PAYMENT_METHOD_CONFIGURATION: ${STRIPE_PAYMENT_METHOD_CONFIGURATION:-}
+      EMAIL_SRV_RESEND: ${EMAIL_SRV_RESEND:-}
+      CLIPROXY_CONTROL_BASE_URL: ${CLIPROXY_CONTROL_BASE_URL:-http://cliproxy-control:8319}
+      CLIPROXY_CONTROL_API_KEY: ${CLIPROXY_CONTROL_API_KEY:?CLIPROXY_CONTROL_API_KEY is required}
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:43001/api/health').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 1s
+    depends_on:
+      gateway-srv:
+        condition: service_healthy
+      cliproxy-control:
+        condition: service_healthy
+    networks:
+      - default
+      - cliproxy-control
+
+  admin:
+    image: ${FRIDAY_RELAY_ADMIN_IMAGE:-friday-relay-admin:latest}
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_ADMIN_MEMORY_LIMIT:-512m}
+    cpus: "${FRIDAY_RELAY_ADMIN_CPU_LIMIT:-0.75}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: admin-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    ports:
+      - "127.0.0.1:${FRIDAY_RELAY_ADMIN_PUBLISHED_PORT:-43002}:43002"
+    volumes:
+      - ${FRIDAY_RELAY_DATA_DIR:-./data}:/app/data
+      - ${FRIDAY_RELAY_CAPTURE_ROOT_HOST_DIR:-./data/archives/capture-v3}:/app/data/archives/capture-v3
+      - ${FRIDAY_RELAY_CONFIG_FILE:-./data/friday-relay.config.json}:/app/data/friday-relay.config.json:ro
+      - ${FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE:?FRIDAY_RELAY_PG_RUNTIME_CONNECTION_STRING_SECRET_FILE is required}:/run/secrets/friday-relay-pg-connection-string:ro
+    environment:
+      NODE_ENV: production
+      PORT: "43002"
+      HOSTNAME: 0.0.0.0
+      FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN: ${FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN:-}
+      FRIDAY_RELAY_CONFIG: /app/data/friday-relay.config.json
+      FRIDAY_RELAY_SECRET_KEY: ${FRIDAY_RELAY_SECRET_KEY:?FRIDAY_RELAY_SECRET_KEY is required}
+      FRIDAY_RELAY_PG_CONNECTION_STRING_FILE: /run/secrets/friday-relay-pg-connection-string
+      FRIDAY_RELAY_PG_APPLICATION_NAME: friday-relay-${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-llm}-admin
+      FRIDAY_RELAY_PG_POOL_MAX: ${FRIDAY_RELAY_PG_ADMIN_POOL_MAX:-4}
+      FRIDAY_RELAY_GATEWAY_INTERNAL_BASE_URL: ${FRIDAY_RELAY_GATEWAY_INTERNAL_BASE_URL:-http://gateway-srv:43000}
+      FRIDAY_RELAY_GATEWAY_IMAGE: ${FRIDAY_RELAY_GATEWAY_IMAGE:-friday-relay-gateway:latest}
+      FRIDAY_RELAY_WEB_IMAGE: ${FRIDAY_RELAY_WEB_IMAGE:-friday-relay-web:latest}
+      FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT: ${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-llm}
+      FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-dev}
+      FRIDAY_RELAY_RUNTIME_FINGERPRINT: ${FRIDAY_RELAY_ADMIN_RUNTIME_FINGERPRINT:-unknown}
+      FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO: ${FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO:-0.05}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${FRIDAY_RELAY_OTEL_APPLICATION_ENDPOINT:-${FRIDAY_RELAY_OTEL_EXPORTER_OTLP_ENDPOINT:-}}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_TIMEOUT: "3000"
+      OTEL_METRIC_EXPORT_INTERVAL: "15000"
+      OTEL_TRACES_SAMPLER: parentbased_traceidratio
+      OTEL_TRACES_SAMPLER_ARG: ${FRIDAY_RELAY_OTEL_TRACE_SAMPLE_RATIO:-0.05}
+      FRIDAY_RELAY_WEB_INTERNAL_BASE_URL: ${FRIDAY_RELAY_WEB_INTERNAL_BASE_URL:-http://web:43001}
+      FRIDAY_RELAY_CLIPROXY_API_IMAGE: ${FRIDAY_RELAY_CLIPROXY_API_IMAGE:-friday-relay-cli-proxy-api:latest}
+      EMAIL_SRV_RESEND: ${EMAIL_SRV_RESEND:-}
+      CLIPROXY_CONTROL_BASE_URL: ${CLIPROXY_CONTROL_BASE_URL:-http://cliproxy-control:8319}
+      CLIPROXY_CONTROL_API_KEY: ${CLIPROXY_CONTROL_API_KEY:?CLIPROXY_CONTROL_API_KEY is required}
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:43002/api/health').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 1s
+    depends_on:
+      gateway-srv:
+        condition: service_healthy
+      cliproxy-control:
+        condition: service_healthy
+    networks:
+      - default
+      - cliproxy-control
+
+  otel-buffer:
+    image: otel/opentelemetry-collector-contrib:0.139.0@sha256:faf125d656fa47cea568b2f3b4494efd2525083bc75c1e96038bc23f05cd68fd
+    profiles: ["observability"]
+    restart: unless-stopped
+    mem_limit: ${FRIDAY_RELAY_OTEL_BUFFER_MEMORY_LIMIT:-256m}
+    cpus: "${FRIDAY_RELAY_OTEL_BUFFER_CPU_LIMIT:-0.25}"
+    pids_limit: ${FRIDAY_RELAY_OTEL_BUFFER_PIDS_LIMIT:-128}
+    logging: *runtime-logging
+    user: "0:0"
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    expose:
+      - "4317"
+      - "4318"
+    volumes:
+      - ./ops/observability/edge-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - otel-buffer-data:/var/lib/otelcol/file-storage
+    environment:
+      FRIDAY_RELAY_OTEL_BUFFER_UPSTREAM_ENDPOINT: ${FRIDAY_RELAY_OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0.0.1:9}
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otelcol-contrib/config.yaml"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+
+  db-ops:
+    image: ${FRIDAY_RELAY_DB_OPS_IMAGE:-friday-relay-db-ops:latest}
+    mem_limit: ${FRIDAY_RELAY_DB_OPS_MEMORY_LIMIT:-1024m}
+    cpus: "${FRIDAY_RELAY_DB_OPS_CPU_LIMIT:-1.0}"
+    pids_limit: ${FRIDAY_RELAY_PIDS_LIMIT:-256}
+    logging: *runtime-logging
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: db-ops-runtime
+      args:
+        BUN_VERSION: ${BUN_VERSION:-1.4.0}
+        FRIDAY_RELAY_RELEASE: ${FRIDAY_RELAY_RELEASE:-local}
+        FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY: ${FRIDAY_RELAY_DOCKER_WORKSPACE_CONCURRENCY:-auto}
+    profiles: ["ops"]
+    volumes:
+      - ${FRIDAY_RELAY_DATA_DIR:-./data}:/app/data
+      - ${FRIDAY_RELAY_CAPTURE_ROOT_HOST_DIR:-./data/archives/capture-v3}:/app/data/archives/capture-v3
+      - ${FRIDAY_RELAY_CONFIG_FILE:-./data/friday-relay.config.json}:/app/data/friday-relay.config.json:ro
+      - ${FRIDAY_RELAY_PG_MIGRATOR_CONNECTION_STRING_SECRET_FILE:?FRIDAY_RELAY_PG_MIGRATOR_CONNECTION_STRING_SECRET_FILE is required}:/run/secrets/friday-relay-pg-connection-string:ro
+    environment:
+      NODE_ENV: production
+      FRIDAY_RELAY_CONFIG: /app/data/friday-relay.config.json
+      FRIDAY_RELAY_SECRET_KEY: ${FRIDAY_RELAY_SECRET_KEY:?FRIDAY_RELAY_SECRET_KEY is required}
+      FRIDAY_RELAY_PG_CONNECTION_STRING_FILE: /run/secrets/friday-relay-pg-connection-string
+      FRIDAY_RELAY_PG_APPLICATION_NAME: friday-relay-${FRIDAY_RELAY_DEPLOYMENT_ENVIRONMENT:-llm}-db-ops
+      FRIDAY_RELAY_PG_POOL_MAX: ${FRIDAY_RELAY_PG_DB_OPS_POOL_MAX:-2}
+      FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN: ${FRIDAY_RELAY_PRIVATE_PROVIDER_ORIGIN:-}
+
+volumes:
+  cliproxy-auth:
+  cliproxy-credentials:
+  cliproxy-logs:
+  otel-buffer-data:
+
+networks:
+  cliproxy-control:
+    internal: true
+  cliproxy-inference:
+    internal: true
+  cliproxy-management:
+    internal: true
+  cliproxy-egress-hop:
+    internal: true
+  cliproxy-public:

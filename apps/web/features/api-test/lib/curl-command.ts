@@ -1,0 +1,2 @@
+import { formatJson, parseRequestParams } from "../form/api-test-values";
+export function buildCurlCommand(origin: string, requestParams: string) { const parsed = parseRequestParams(requestParams); const data = parsed.ok ? { payload: { ...parsed.value, stream: false } } : { payload: requestParams }; return ["curl -X POST \\", `  '${origin || "<web-origin>"}/api/user/api-test' \\`, "  -H 'content-type: application/json' \\", "  --cookie 'friday_web_access_token=<web-access-token>' \\", `  --data '${formatJson(data).replaceAll("'", "'\\''")}'`].join("\n"); }

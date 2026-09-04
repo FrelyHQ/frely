@@ -1,0 +1,32 @@
+{
+  "name": "@frely/gateway-core",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/application": "workspace:*",
+    "@frely/capture": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/entitlement": "workspace:*",
+    "@frely/identity": "workspace:*",
+    "@frely/model-access": "workspace:*",
+    "@frely/provider-runtime": "workspace:*",
+    "@frely/request-execution": "workspace:*",
+    "@frely/pricing": "workspace:*"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

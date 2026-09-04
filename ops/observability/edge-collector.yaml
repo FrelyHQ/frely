@@ -1,0 +1,85 @@
+extensions:
+  health_check:
+    endpoint: 127.0.0.1:13133
+  file_storage:
+    directory: /var/lib/otelcol/file-storage
+    timeout: 1s
+    fsync: true
+    create_directory: true
+    directory_permissions: "0700"
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 4
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 192
+    spike_limit_mib: 48
+  transform/sanitize:
+    error_mode: ignore
+    trace_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.version", "deployment.environment", "deployment.environment.name", "friday.release", "friday.runtime_fingerprint"])
+      - context: span
+        statements:
+          - set(name, "next.framework") where not IsMatch(name, "^friday\\.")
+          - set(status.message, "") where status.message != nil
+          - keep_keys(attributes, ["service", "route", "terminal", "operation", "surface_type", "surface_name", "result", "release", "browser.duration_ms", "friday.collection.page_size", "friday.collection.items_returned", "db.response.returned_rows"])
+      - context: spanevent
+        statements:
+          - set(name, "event")
+          - keep_keys(attributes, [])
+    metric_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.version", "deployment.environment", "deployment.environment.name", "friday.release", "friday.runtime_fingerprint"])
+      - context: datapoint
+        statements:
+          - keep_keys(attributes, ["service", "surface_type", "surface_name", "result", "release", "route", "bucket", "decision", "source"])
+  batch:
+    send_batch_size: 256
+    send_batch_max_size: 512
+    timeout: 2s
+
+exporters:
+  otlphttp/upstream:
+    endpoint: ${env:FRIDAY_RELAY_OTEL_BUFFER_UPSTREAM_ENDPOINT}
+    timeout: 3s
+    sending_queue:
+      enabled: true
+      sizer: bytes
+      num_consumers: 1
+      queue_size: 1610612736
+      storage: file_storage
+      block_on_overflow: false
+      wait_for_result: false
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 0s
+
+service:
+  extensions: [health_check, file_storage]
+  telemetry:
+    logs:
+      level: warn
+    metrics:
+      level: none
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/sanitize, batch]
+      exporters: [otlphttp/upstream]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/sanitize, batch]
+      exporters: [otlphttp/upstream]

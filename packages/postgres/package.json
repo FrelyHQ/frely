@@ -1,0 +1,56 @@
+{
+  "name": "@frely/postgres",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./instance-data-profile": {
+      "types": "./dist/instance-data-profile.d.ts",
+      "import": "./dist/instance-data-profile.js"
+    },
+    "./migration-state": {
+      "types": "./dist/migration-state.d.ts",
+      "import": "./dist/migration-state.js"
+    },
+    "./model-types": {
+      "types": "./dist/model-types.d.ts",
+      "import": "./dist/model-types.js"
+    },
+    "./runtime-artifacts": {
+      "types": "./dist/runtime-artifacts.d.ts",
+      "import": "./dist/runtime-artifacts.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "prisma:validate": "prisma validate --config prisma.config.ts",
+    "prisma:generate": "prisma generate --config prisma.config.ts",
+    "pretypecheck": "bun run prisma:generate",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "bun run prisma:generate",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "pg": "^8.22.0",
+    "pg-copy-streams": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.3",
+    "@types/pg-copy-streams": "^1.2.5",
+    "prisma": "7.9.1"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}

@@ -1,0 +1,2827 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  previewFeatures        = ["partialIndexes"]
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+  moduleFormat           = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model abuse_rate_limit_counters {
+  id             String  @id
+  bucket         String
+  subject_hash   String
+  window_start   BigInt
+  window_seconds Int
+  count          Int
+  blocked_until  BigInt?
+  created_at     String
+  updated_at     String
+
+  @@unique([bucket, subject_hash, window_start, window_seconds], map: "abuse_rate_limit_counters_window_unique")
+  @@index([blocked_until, window_start], map: "abuse_rate_limit_counters_expiry_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model access_point_price_tiers {
+  id                              String              @id
+  access_point_price_id           String
+  service_tier                    String              @default("standard")
+  tier_key                        String
+  min_input_tokens                BigInt
+  max_input_tokens                BigInt?
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  status                          String
+  created_at                      String
+  updated_at                      String
+  access_point_prices             access_point_prices @relation(fields: [access_point_price_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_price_tiers_access_point_price_id_access_point_pri")
+
+  @@unique([access_point_price_id, service_tier, tier_key], map: "access_point_price_tiers_unique")
+  @@index([access_point_price_id, service_tier, status, min_input_tokens], map: "access_point_price_tiers_parent_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model access_point_prices {
+  id                              String                       @id
+  access_point_id                 String
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  status                          String
+  initial_price                   Int                          @default(0)
+  created_at                      String
+  updated_at                      String
+  access_point_price_tiers        access_point_price_tiers[]
+  AccessPoint                     AccessPoint                  @relation(fields: [access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_prices_access_point_id_access_points_fk_1")
+  billing_access_point_edges      billing_access_point_edges[]
+
+  @@unique([access_point_id], map: "access_point_prices_initial_unique", where: raw("(initial_price = 1)"))
+  @@index([access_point_id, status], map: "access_point_prices_lookup_idx")
+  @@index([access_point_id, status, created_at, id], map: "access_point_prices_lookup_latest_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model AccessPointTarget {
+  id                      String                      @id
+  accessPointId           String                      @map("access_point_id")
+  targetType              String                      @map("target_type")
+  targetAccessPointId     String?                     @map("target_access_point_id")
+  targetProviderId        String?                     @map("target_provider_id")
+  targetProviderModelName String?                     @map("target_provider_model_name")
+  targetProviderModelId   String?                     @map("target_provider_model_id")
+  position                Int
+  status                  String
+  removedAt               String?                     @map("removed_at")
+  createdAt               String                      @map("created_at")
+  updatedAt               String                      @map("updated_at")
+  accessPoint             AccessPoint                 @relation("access_point_targets_access_point_idToaccess_points", fields: [accessPointId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_targets_access_point_id_access_points_fk_1")
+  targetAccessPoint       AccessPoint?                @relation("access_point_targets_target_access_point_idToaccess_points", fields: [targetAccessPointId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_targets_target_access_point_id_access_points_fk_2")
+  provider                providers?                  @relation(fields: [targetProviderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_targets_target_provider_id_providers_fk_3")
+  targetProviderModel     provider_models?            @relation("access_point_targets_target_provider_model_idToprovider_models", fields: [targetProviderModelId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_point_targets_provider_model_fk")
+  providerAttempts        request_provider_attempts[]
+
+  @@unique([accessPointId, position], map: "access_point_targets_enabled_position_unique", where: raw("((removed_at IS NULL) AND (status = 'enabled'::text))"))
+  @@index([accessPointId, status, position], map: "access_point_targets_access_point_status_idx")
+  @@index([accessPointId, position], map: "access_point_targets_position_idx")
+  @@index([targetAccessPointId], map: "access_point_targets_target_access_point_idx")
+  @@index([targetAccessPointId, accessPointId, id], map: "access_point_targets_inbound_active_idx", where: raw("((removed_at IS NULL) AND (target_access_point_id IS NOT NULL))"))
+  @@index([targetProviderId, targetProviderModelName], map: "access_point_targets_target_provider_idx")
+  @@index([targetProviderModelId, accessPointId, id], map: "access_point_targets_target_provider_model_id_idx", where: raw("(target_provider_model_id IS NOT NULL)"))
+  @@map("access_point_targets")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model AccessPoint {
+  id                            String                       @id
+  ownerId                       String                       @map("owner_id")
+  scopeRef                      String                       @map("scope_ref")
+  name                          String
+  description                   String?
+  apiFamily                     String                       @map("api_family")
+  exposedModel                  String                       @map("exposed_model")
+  targetModel                   String                       @map("target_model")
+  routingRuleId                 String                       @default("direct") @map("selector_id")
+  routingRuleBehaviorVersion    Int                          @default(1) @map("selector_behavior_version")
+  routingRuleConfigJson         String                       @default("{}") @map("selector_config_json")
+  requestOverridesJson          String                       @default("{}") @map("request_overrides_json")
+  routingRevision               Int                          @default(1) @map("routing_revision")
+  legacyTargetType              String                       @map("target_type")
+  legacyTargetId                String?                      @map("target_id")
+  legacyTargetProviderId        String?                      @map("target_provider_id")
+  legacyTargetProviderModelName String?                      @map("target_provider_model_name")
+  priority                      Int
+  weight                        Int
+  fallbackOrder                 Int                          @map("fallback_order")
+  status                        String
+  removedAt                     String?                      @map("removed_at")
+  createIdempotencyKeyHash      String?                      @map("creation_idempotency_key_hash")
+  createRequestHash             String?                      @map("creation_request_hash")
+  createdAt                     String                       @map("created_at")
+  updatedAt                     String                       @map("updated_at")
+  prices                        access_point_prices[]
+  targets                       AccessPointTarget[]          @relation("access_point_targets_access_point_idToaccess_points")
+  inboundTargets                AccessPointTarget[]          @relation("access_point_targets_target_access_point_idToaccess_points")
+  billingEdges                  billing_access_point_edges[] @relation("billing_access_point_edges_access_point_idToaccess_points")
+  billingTargetEdges            billing_access_point_edges[] @relation("billing_access_point_edges_target_access_point_idToaccess_points")
+  planPrices                    plan_access_point_prices[]
+  planReferences                plan_access_points[]
+  requestLogs                   request_logs[]
+  providerAttempts              request_provider_attempts[]
+  personalProviderSlot          user_provider_slots?         @relation(fields: [personalProviderSlotId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "access_points_personal_provider_slot_id_fk")
+  personalProviderSlotId        String?                      @map("personal_provider_slot_id")
+
+  @@index([ownerId, priority], map: "access_points_owner_idx")
+  @@index([ownerId, status, priority, fallbackOrder, createdAt], map: "access_points_owner_status_order_idx")
+  @@unique([scopeRef, createIdempotencyKeyHash], map: "access_points_create_idempotency_unique", where: raw("(creation_idempotency_key_hash IS NOT NULL)"))
+  @@index([scopeRef, id], map: "access_points_scope_occupancy_idx", where: raw("(removed_at IS NULL)"))
+  @@index([personalProviderSlotId, id], map: "access_points_personal_slot_occupancy_idx", where: raw("((personal_provider_slot_id IS NOT NULL) AND (removed_at IS NULL))"))
+  @@index([scopeRef, status, exposedModel, priority, fallbackOrder, createdAt], map: "access_points_scope_status_order_idx")
+  @@index([legacyTargetType, legacyTargetId], map: "access_points_target_idx")
+  @@index([legacyTargetProviderId, legacyTargetProviderModelName], map: "access_points_target_provider_idx")
+  @@map("access_points")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model admin_grant_batch_items {
+  id                  String              @id
+  batch_id            String
+  target_user_id      String
+  outcome             String
+  reason_code         String?
+  card_id             String?
+  subscription_id     String?
+  processed_at        String
+  admin_grant_batches admin_grant_batches @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batch_items_batch_id_admin_grant_batches_fk_1")
+  cards               cards?              @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batch_items_card_id_cards_fk_3")
+  plan_subscriptions  plan_subscriptions? @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batch_items_subscription_id_plan_subscriptions_fk_4")
+  users               user_controls               @relation(fields: [target_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batch_items_target_user_id_users_fk_2")
+
+  @@unique([batch_id, target_user_id], map: "admin_grant_batch_items_batch_target_unique")
+  @@index([batch_id, outcome, id], map: "admin_grant_batch_items_batch_outcome_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model admin_grant_batches {
+  id                      String                    @id
+  action_type             String
+  reference_code          String
+  plan_id                 String?
+  credit_product_id       String?
+  expires_at              String?
+  note                    String?
+  fallback_to_plan_card   Int                       @default(0)
+  requested_by_user_id    String
+  idempotency_key_hash    String
+  request_hash            String
+  created_at              String
+  completed_at            String?
+  admin_grant_batch_items admin_grant_batch_items[]
+  credit_products         credit_products?          @relation(fields: [credit_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batches_credit_product_id_credit_products_fk_2")
+  plans                   plans?                    @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batches_plan_id_plans_fk_1")
+  users                   user_controls                     @relation(fields: [requested_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "admin_grant_batches_requested_by_user_id_users_fk_3")
+
+  @@unique([requested_by_user_id, idempotency_key_hash], map: "admin_grant_batches_request_idempotency_unique")
+  @@index([created_at, id], map: "admin_grant_batches_created_idx")
+  @@index([reference_code, created_at], map: "admin_grant_batches_reference_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model agent_catalog_revisions {
+  id       Int @id @default(autoincrement())
+  revision Int @default(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model api_keys {
+  id                     String                   @id
+  user_id                String
+  name                   String
+  key_hash               String                   @unique(map: "api_keys_hash_unique")
+  key_prefix             String
+  key_value              String
+  status                 String
+  expires_at             String?
+  revoked_at             String?
+  created_at             String
+  updated_at             String
+  users                  user_controls                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "api_keys_user_id_users_fk_1")
+  mcp_orchestration_runs mcp_orchestration_runs[]
+  request_logs           request_logs[]
+  api_key_plan_source_restrictions api_key_plan_source_restrictions?
+
+  @@index([user_id], map: "api_keys_user_idx")
+}
+
+/// A row exists only when an API key uses an explicit restricted Plan source policy.
+model api_key_plan_source_restrictions {
+  api_key_id                          String                             @id
+  mode                                String                             @default("restricted")
+  created_at                          String
+  updated_at                          String
+  api_keys                            api_keys                          @relation(fields: [api_key_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_key_plan_source_restrictions_api_key_fk")
+  api_key_plan_source_selections      api_key_plan_source_selections[]
+  api_key_team_scope_selections       api_key_team_scope_selections[]
+}
+
+model api_key_plan_source_selections {
+  id                                  String                             @id
+  api_key_id                          String
+  plan_id                             String
+  subscription_scope_ref              String
+  created_at                          String
+  api_key_plan_source_restrictions   api_key_plan_source_restrictions    @relation(fields: [api_key_id], references: [api_key_id], onDelete: Cascade, onUpdate: NoAction, map: "api_key_plan_source_selections_restriction_fk")
+
+  @@unique([api_key_id, plan_id, subscription_scope_ref], map: "api_key_plan_source_selections_unique")
+  @@index([api_key_id, plan_id, subscription_scope_ref], map: "api_key_plan_source_selections_lookup_idx")
+}
+
+model api_key_team_scope_selections {
+  id                                  String                             @id
+  api_key_id                          String
+  team_id                             String
+  created_at                          String
+  api_key_plan_source_restrictions   api_key_plan_source_restrictions    @relation(fields: [api_key_id], references: [api_key_id], onDelete: Cascade, onUpdate: NoAction, map: "api_key_team_scope_selections_restriction_fk")
+
+  @@unique([api_key_id, team_id], map: "api_key_team_scope_selections_unique")
+  @@index([api_key_id, team_id], map: "api_key_team_scope_selections_lookup_idx")
+}
+
+model audit_logs {
+  id              String  @id
+  actor_type      String
+  actor_id        String
+  action          String
+  resource_type   String
+  resource_id     String
+  result          String
+  request_id      String?
+  source          String
+  ip_hash         String?
+  user_agent_hash String?
+  metadata_json   String
+  created_at      String
+
+  @@index([created_at], map: "audit_logs_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_grant_quotas {
+  id               String           @id
+  grant_id         String
+  capability_code  String
+  granted_units    BigInt
+  created_at       String
+  authority_grants authority_grants @relation(fields: [grant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_grant_quotas_grant_id_authority_grants_fk_1")
+  authority_uses   authority_uses[]
+
+  @@unique([grant_id, capability_code], map: "authority_grant_quotas_grant_capability_unique")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_grants {
+  id                                                String                   @id
+  beneficiary_user_id                               String
+  role_domain                                       String
+  role_code                                         String
+  role_scope_id                                     String?
+  source_kind                                       String
+  source_purchase_id                                String?                  @unique(map: "authority_grants_source_purchase_unique")
+  source_product_code_snapshot                      String?
+  source_product_version_snapshot                   Int?
+  source_origin_id_snapshot                         String?
+  max_current_owned_teams_snapshot                  Int?
+  max_lifetime_created_teams_snapshot               Int?
+  issued_by_user_id                                 String?
+  effective_start                                   String
+  effective_end                                     String?
+  lifecycle                                         String
+  canceled_at                                       String?
+  canceled_by_user_id                               String?
+  cancel_reason_code                                String?
+  created_at                                        String
+  authority_grant_quotas                            authority_grant_quotas[]
+  users_authority_grants_beneficiary_user_idTousers user_controls                    @relation("authority_grants_beneficiary_user_idTousers", fields: [beneficiary_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_grants_beneficiary_user_id_users_fk_1")
+  users_authority_grants_canceled_by_user_idTousers user_controls?                   @relation("authority_grants_canceled_by_user_idTousers", fields: [canceled_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_grants_canceled_by_user_id_users_fk_4")
+  users_authority_grants_issued_by_user_idTousers   user_controls?                   @relation("authority_grants_issued_by_user_idTousers", fields: [issued_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_grants_issued_by_user_id_users_fk_3")
+  authority_purchases                               authority_purchases?     @relation(fields: [source_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_grants_source_purchase_id_authority_purchases_fk_2")
+  authority_refunds                                 authority_refunds?
+
+  @@unique([role_domain, role_code], map: "authority_grants_active_owner_unique", where: raw("((source_kind = 'system_bootstrap'::text) AND (lifecycle = 'active'::text))"))
+  @@index([beneficiary_user_id, lifecycle, effective_end], map: "authority_grants_beneficiary_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_products {
+  id                                String                              @id
+  code                              String                              @unique(map: "authority_products_listed_code_unique", where: raw("(lifecycle = 'listed'::text)"))
+  version                           Int
+  display_name                      String
+  effect_code                       String
+  grant_units                       BigInt
+  purchase_amount_units             BigInt
+  grant_duration_seconds            Int
+  max_lifetime_purchases_per_user   Int?
+  max_unconsumed_units_per_user     Int?
+  max_current_owned_teams           Int?
+  max_lifetime_created_teams        Int?
+  refund_mode                       String
+  refund_deadline_seconds           Int?
+  settlement_hold_seconds           Int
+  seller_scope_ref                  String
+  lifecycle                         String
+  created_by_owner_user_id          String
+  created_at                        String
+  updated_at                        String
+  users                             user_controls                               @relation(fields: [created_by_owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_products_created_by_owner_user_id_users_fk_1")
+  authority_purchases               authority_purchases[]
+  team_provider_entitlements        team_provider_entitlements[]
+  user_provider_entitlement_periods user_provider_entitlement_periods[]
+
+  @@unique([code, version], map: "authority_products_code_version_unique")
+  @@index([lifecycle, code, version], map: "authority_products_lifecycle_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_purchases {
+  id                               String                             @id
+  product_id                       String
+  buyer_user_id                    String
+  credit_account_id                String
+  product_code                     String
+  product_version                  Int
+  product_display_name             String
+  effect_code                      String
+  grant_units                      BigInt
+  purchase_amount_units            BigInt
+  grant_duration_seconds           Int
+  max_lifetime_purchases_per_user  Int?
+  max_unconsumed_units_per_user    Int?
+  max_current_owned_teams          Int?
+  max_lifetime_created_teams       Int?
+  refund_mode                      String
+  refund_deadline_seconds          Int?
+  settlement_hold_seconds          Int
+  seller_scope_ref                 String
+  idempotency_key_hash             String
+  request_hash                     String
+  created_at                       String
+  authority_grants                 authority_grants?
+  users                            user_controls                              @relation(fields: [buyer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_purchases_buyer_user_id_users_fk_2")
+  credit_accounts                  credit_accounts                    @relation(fields: [credit_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_purchases_credit_account_id_credit_accounts_fk_3")
+  authority_products               authority_products                 @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_purchases_product_id_authority_products_fk_1")
+  authority_refunds                authority_refunds?
+  credit_ledger_events             credit_ledger_events?
+  seller_settlement_events         seller_settlement_events?
+  seller_settlement_windows        seller_settlement_windows[]
+  team_provider_entitlements       team_provider_entitlements?
+  user_provider_entitlement_period user_provider_entitlement_periods?
+  created_user_provider_slot       user_provider_slots?
+
+  @@unique([buyer_user_id, idempotency_key_hash], map: "authority_purchases_buyer_idempotency_unique")
+  @@index([buyer_user_id, product_code, created_at], map: "authority_purchases_buyer_product_idx")
+  @@index([product_id, created_at], map: "authority_purchases_product_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_refunds {
+  id                    String              @id
+  authority_purchase_id String              @unique(map: "authority_refunds_purchase_unique")
+  authority_grant_id    String              @unique(map: "authority_refunds_grant_unique")
+  actor_owner_user_id   String
+  reason_code           String
+  idempotency_key_hash  String
+  request_hash          String
+  created_at            String
+  users                 user_controls               @relation(fields: [actor_owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_refunds_actor_owner_user_id_users_fk_3")
+  authority_grants      authority_grants    @relation(fields: [authority_grant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_refunds_authority_grant_id_authority_grants_fk_2")
+  authority_purchases   authority_purchases @relation(fields: [authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_refunds_authority_purchase_id_authority_purchases_fk_")
+
+  @@unique([actor_owner_user_id, idempotency_key_hash], map: "authority_refunds_actor_idempotency_unique")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authority_uses {
+  id                                              String                 @id
+  grant_quota_id                                  String
+  unit_index                                      Int
+  beneficiary_user_id                             String
+  operation                                       String
+  idempotency_key_hash                            String
+  request_hash                                    String
+  target_type                                     String
+  target_id_snapshot                              String
+  actor_user_id                                   String
+  created_at                                      String
+  users_authority_uses_actor_user_idTousers       user_controls                  @relation("authority_uses_actor_user_idTousers", fields: [actor_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_uses_actor_user_id_users_fk_3")
+  users_authority_uses_beneficiary_user_idTousers user_controls                  @relation("authority_uses_beneficiary_user_idTousers", fields: [beneficiary_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_uses_beneficiary_user_id_users_fk_2")
+  authority_grant_quotas                          authority_grant_quotas @relation(fields: [grant_quota_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authority_uses_grant_quota_id_authority_grant_quotas_fk_1")
+
+  @@unique([beneficiary_user_id, operation, idempotency_key_hash], map: "authority_uses_operation_idempotency_unique")
+  @@unique([grant_quota_id, unit_index], map: "authority_uses_quota_unit_unique")
+  @@index([beneficiary_user_id, created_at], map: "authority_uses_beneficiary_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model billing_access_point_edges {
+  id                                                                             String              @id
+  request_id                                                                     String
+  edge_order                                                                     Int
+  chain_index                                                                    Int
+  buyer_scope_ref                                                                String
+  seller_scope_ref                                                               String
+  access_point_id                                                                String
+  target_access_point_id                                                         String?
+  is_internal                                                                    Int
+  access_point_price_id                                                          String
+  price_tier_key                                                                 String              @default("legacy_flat")
+  price_snapshot_json                                                            String
+  input_tokens                                                                   BigInt
+  cached_input_tokens                                                            BigInt
+  cache_write_tokens                                                             BigInt              @default(0)
+  output_tokens                                                                  BigInt
+  amount                                                                         Float
+  amount_units                                                                   BigInt
+  created_at                                                                     String
+  access_points_billing_access_point_edges_access_point_idToaccess_points        AccessPoint         @relation("billing_access_point_edges_access_point_idToaccess_points", fields: [access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_access_point_edges_access_point_id_access_points_fk_2")
+  access_point_prices                                                            access_point_prices @relation(fields: [access_point_price_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_access_point_edges_access_point_price_id_access_point_p")
+  request_logs                                                                   request_logs        @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_access_point_edges_request_id_request_logs_fk_1")
+  access_points_billing_access_point_edges_target_access_point_idToaccess_points AccessPoint?        @relation("billing_access_point_edges_target_access_point_idToaccess_points", fields: [target_access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_access_point_edges_target_access_point_id_access_points")
+
+  @@index([buyer_scope_ref, created_at], map: "billing_access_point_edges_buyer_idx")
+  @@index([is_internal, created_at], map: "billing_access_point_edges_internal_idx")
+  @@index([request_id, edge_order], map: "billing_access_point_edges_request_idx")
+  @@index([seller_scope_ref, created_at], map: "billing_access_point_edges_seller_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model billing_events {
+  id                           String               @id
+  request_id                   String
+  billing_subscription_id      String?
+  billing_scope_ref            String?
+  billable_price_id            String
+  billable_price_source        String
+  billable_price_tier_key      String               @default("legacy_flat")
+  operation_kind               String               @default("inference")
+  mcp_orchestration_run_id     String?
+  mcp_tool_call_attempt_id     String?
+  mcp_charge_units             BigInt               @default(0)
+  provider_model_cost_id       String
+  provider_cost_tier_key       String               @default("legacy_flat")
+  input_tokens                 BigInt
+  cached_input_tokens          BigInt
+  cache_write_tokens           BigInt               @default(0)
+  output_tokens                BigInt
+  total_tokens                 BigInt
+  billable_amount              Float
+  provider_cost_amount         Float
+  gross_margin_amount          Float
+  billable_amount_units        BigInt
+  provider_cost_amount_units   BigInt
+  gross_margin_amount_units    BigInt
+  usage_source                 String
+  billable_price_snapshot_json String
+  cost_price_snapshot_json     String
+  created_at                   String
+  plan_subscriptions           plan_subscriptions?  @relation(fields: [billing_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_events_billing_subscription_id_plan_subscriptions_fk_2")
+  provider_model_costs         provider_model_costs @relation(fields: [provider_model_cost_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_events_provider_model_cost_id_provider_model_costs_fk_3")
+  request_logs                 request_logs         @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_events_request_id_request_logs_fk_1")
+
+  @@index([created_at], map: "billing_events_created_idx")
+  @@index([operation_kind, created_at], map: "billing_events_operation_idx")
+  @@index([request_id], map: "billing_events_request_idx")
+  @@index([billing_scope_ref, created_at], map: "billing_events_scope_created_idx")
+  @@index([billing_subscription_id, created_at], map: "billing_events_subscription_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model billing_history_refs {
+  billing_event_id           String                 @id
+  request_id                 String
+  billing_subscription_id    String?
+  billing_scope_ref          String?
+  input_tokens               BigInt
+  cached_input_tokens        BigInt
+  cache_write_tokens         BigInt
+  output_tokens              BigInt
+  total_tokens               BigInt
+  billable_amount            Float
+  provider_cost_amount       Float
+  gross_margin_amount        Float
+  billable_amount_units      BigInt
+  provider_cost_amount_units BigInt
+  gross_margin_amount_units  BigInt
+  provider_model_cost_id     String
+  usage_source               String
+  occurred_at                String
+  archive_month              String?
+  object_sha256              String?
+  row_key                    String?
+  archived_at                String?
+  credit_ledger_events       credit_ledger_events[]
+
+  @@index([archive_month, occurred_at, billing_event_id], map: "billing_history_refs_archive_idx")
+  @@index([request_id, occurred_at, billing_event_id], map: "billing_history_refs_request_idx")
+  @@index([billing_scope_ref, occurred_at], map: "billing_history_refs_scope_idx")
+  @@index([billing_subscription_id, occurred_at], map: "billing_history_refs_subscription_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model billing_provider_cost_archive_entries {
+  event_id                       String                         @id
+  request_id                     String
+  provider_id                    String
+  created_at                     String
+  archive_month                  String
+  billing_provider_cost_archives billing_provider_cost_archives @relation(fields: [archive_month], references: [archive_month], onDelete: NoAction, onUpdate: NoAction, map: "billing_provider_cost_archive_entries_archive_month_billing_pro")
+
+  @@index([provider_id, created_at], map: "billing_provider_cost_archive_entries_provider_idx")
+  @@index([request_id], map: "billing_provider_cost_archive_entries_request_idx")
+}
+
+model billing_provider_cost_archives {
+  archive_month                         String                                  @id
+  format_version                        Int
+  schema_version                        Int
+  status                                String
+  row_count                             Int
+  compressed_bytes                      Int
+  uncompressed_bytes                    Int
+  object_key                            String
+  object_sha256                         String
+  manifest_object_key                   String
+  manifest_sha256                       String
+  created_at                            String
+  uploaded_at                           String?
+  verified_at                           String?
+  purged_at                             String?
+  billing_provider_cost_archive_entries billing_provider_cost_archive_entries[]
+
+  @@index([archive_month, status], map: "billing_provider_cost_archives_month_status_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model billing_provider_cost_events {
+  id                        String                     @id
+  request_id                String
+  provider_attempt_id       String?
+  operation_kind            String                     @default("inference")
+  provider_owner_scope_ref  String
+  provider_id               String
+  provider_model_name       String
+  provider_model_cost_id    String
+  cost_tier_key             String                     @default("legacy_flat")
+  cost_snapshot_json        String
+  input_tokens              BigInt
+  cached_input_tokens       BigInt
+  cache_write_tokens        BigInt                     @default(0)
+  output_tokens             BigInt
+  amount                    Float
+  amount_units              BigInt
+  created_at                String
+  request_provider_attempts request_provider_attempts? @relation(fields: [provider_attempt_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_provider_cost_events_provider_attempt_id_request_provid")
+  providers                 providers                  @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_provider_cost_events_provider_id_providers_fk_3")
+  provider_model_costs      provider_model_costs       @relation(fields: [provider_model_cost_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_provider_cost_events_provider_model_cost_id_provider_mo")
+  request_logs              request_logs               @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_provider_cost_events_request_id_request_logs_fk_1")
+
+  @@unique([provider_attempt_id, operation_kind], map: "billing_provider_cost_events_attempt_operation_unique", where: raw("(provider_attempt_id IS NOT NULL)"))
+  @@index([provider_attempt_id], map: "billing_provider_cost_events_attempt_idx")
+  @@index([provider_owner_scope_ref, created_at], map: "billing_provider_cost_events_owner_idx")
+  @@index([provider_id, created_at], map: "billing_provider_cost_events_provider_idx")
+  @@index([request_id], map: "billing_provider_cost_events_request_idx")
+}
+
+model budget_policies {
+  id                    String                  @id
+  metric                String
+  limit_value           Float
+  limit_amount_units    BigInt?
+  window_type           String
+  window_seconds        Int?
+  status                String
+  created_at            String
+  updated_at            String
+  scope_budget_policies scope_budget_policies[]
+
+  @@index([status])
+  @@index([metric, window_type, status], map: "budget_policies_window_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model card_activation_batches {
+  id                                                      String                  @id
+  reference_code                                          String                  @unique(map: "card_activation_batches_reference_unique")
+  card_type                                               String
+  plan_id                                                 String?
+  credit_product_id                                       String?
+  credit_amount_units                                     BigInt?
+  quantity                                                Int
+  redeem_expires_at                                       String
+  export_seed_ciphertext                                  String
+  export_key_version                                      Int
+  idempotency_key_hash                                    String
+  request_hash                                            String
+  created_by_user_id                                      String
+  created_at                                              String
+  revoked_at                                              String?
+  revoked_by_user_id                                      String?
+  revocation_reason                                       String?
+  users_card_activation_batches_created_by_user_idTousers user_controls                   @relation("card_activation_batches_created_by_user_idTousers", fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_batches_created_by_user_id_users_fk_3")
+  credit_products                                         credit_products?        @relation(fields: [credit_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_batches_credit_product_id_credit_products_fk_2")
+  plans                                                   plans?                  @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_batches_plan_id_plans_fk_1")
+  users_card_activation_batches_revoked_by_user_idTousers user_controls?                  @relation("card_activation_batches_revoked_by_user_idTousers", fields: [revoked_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_batches_revoked_by_user_id_users_fk_4")
+  card_activation_codes                                   card_activation_codes[]
+
+  @@unique([created_by_user_id, idempotency_key_hash], map: "card_activation_batches_creator_idempotency_unique")
+  @@index([created_at, id], map: "card_activation_batches_created_idx")
+  @@index([revoked_at, redeem_expires_at], map: "card_activation_batches_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model card_activation_codes {
+  id                                                     String                  @id
+  batch_id                                               String
+  ordinal                                                Int
+  code_hash                                              String                  @unique(map: "card_activation_codes_hash_unique")
+  code_suffix                                            String
+  created_at                                             String
+  revoked_at                                             String?
+  revoked_by_user_id                                     String?
+  revocation_reason                                      String?
+  redeemed_at                                            String?
+  redeemed_by_user_id                                    String?
+  redeemed_card_id                                       String?
+  card_activation_batches                                card_activation_batches @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_codes_batch_id_card_activation_batches_fk_1")
+  users_card_activation_codes_redeemed_by_user_idTousers user_controls?                  @relation("card_activation_codes_redeemed_by_user_idTousers", fields: [redeemed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_codes_redeemed_by_user_id_users_fk_3")
+  cards                                                  cards?                  @relation(fields: [redeemed_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_codes_redeemed_card_id_cards_fk_4")
+  users_card_activation_codes_revoked_by_user_idTousers  user_controls?                  @relation("card_activation_codes_revoked_by_user_idTousers", fields: [revoked_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_activation_codes_revoked_by_user_id_users_fk_2")
+
+  @@unique([batch_id, ordinal], map: "card_activation_codes_batch_ordinal_unique")
+  @@index([batch_id, ordinal], map: "card_activation_codes_batch_ordinal_idx")
+  @@index([batch_id, redeemed_at, revoked_at], map: "card_activation_codes_status_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model card_transfers {
+  id                                       String  @id
+  card_id                                  String
+  from_user_id                             String
+  to_user_id                               String
+  reference_code                           String?
+  note                                     String?
+  created_at                               String
+  cards                                    cards   @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_transfers_card_id_cards_fk_1")
+  users_card_transfers_from_user_idTousers user_controls   @relation("card_transfers_from_user_idTousers", fields: [from_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_transfers_from_user_id_users_fk_2")
+  users_card_transfers_to_user_idTousers   user_controls   @relation("card_transfers_to_user_idTousers", fields: [to_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_transfers_to_user_id_users_fk_3")
+
+  @@index([card_id, created_at], map: "card_transfers_card_created_idx")
+  @@index([from_user_id, created_at], map: "card_transfers_from_created_idx")
+  @@index([reference_code, created_at], map: "card_transfers_reference_created_idx")
+  @@index([to_user_id, created_at], map: "card_transfers_to_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model cards {
+  id                      String                    @id
+  card_type               String
+  issuance_type           String                    @default("purchase")
+  owner_user_id           String
+  plan_id                 String?
+  credit_product_id       String?
+  credit_amount_units     BigInt?
+  created_at              String
+  used_at                 String?
+  invalidated_at          String?
+  invalidation_reason     String?
+  expires_at              String
+  replaces_card_id        String?                   @unique(map: "cards_replaces_card_unique")
+  admin_grant_batch_items admin_grant_batch_items[]
+  card_activation_codes   card_activation_codes[]
+  card_transfers          card_transfers[]
+  credit_products         credit_products?          @relation(fields: [credit_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cards_credit_product_id_credit_products_fk_3")
+  users                   user_controls                     @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cards_owner_user_id_users_fk_1")
+  plans                   plans?                    @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cards_plan_id_plans_fk_2")
+  cards                   cards?                    @relation("cardsTocards", fields: [replaces_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cards_replaces_card_id_cards_fk_4")
+  other_cards             cards?                    @relation("cardsTocards")
+  credit_ledger_events    credit_ledger_events?
+  credit_topups           credit_topups?
+  plan_purchase_orders    plan_purchase_orders?
+  plan_subscriptions      plan_subscriptions?
+
+  @@index([owner_user_id, created_at], map: "cards_owner_created_idx")
+  @@index([card_type], map: "cards_type_idx")
+}
+
+model cpa_instances {
+  id         String      @id
+  name       String
+  status     String
+  created_at String
+  updated_at String
+  providers  providers[]
+
+  @@index([status])
+}
+
+model credit_accounts {
+  id                           String                   @id
+  scope_ref                    String                   @unique(map: "credit_accounts_scope_unique")
+  status                       String
+  balance_snap_units           BigInt                   @default(0)
+  balance_snap_ledger_event_id String?
+  balance_snap_updated_at      String?
+  created_at                   String
+  updated_at                   String
+  authority_purchases          authority_purchases[]
+  credit_ledger_events         credit_ledger_events[]
+  credit_topups                credit_topups[]
+  mcp_spend_reservations       mcp_spend_reservations[]
+
+  @@index([status])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model credit_ledger_events {
+  id                                                                         String                @id
+  account_id                                                                 String
+  event_type                                                                 String
+  amount_units                                                               BigInt
+  transfer_id                                                                String?
+  related_event_id                                                           String?
+  plan_subscription_id                                                       String?
+  authority_purchase_id                                                      String?               @unique(map: "credit_ledger_events_authority_purchase_charge_unique", where: raw("((authority_purchase_id IS NOT NULL) AND (event_type = 'authority_purchase'::text))"))
+  billing_event_id                                                           String?
+  provider_attempt_id                                                        String?
+  related_topup_id                                                           String?               @unique(map: "credit_ledger_events_related_topup_unique")
+  card_id                                                                    String?               @unique(map: "credit_ledger_events_card_unique")
+  from_account_id                                                            String?
+  to_account_id                                                              String?
+  reason                                                                     String?
+  actor_user_id                                                              String?
+  created_at                                                                 String
+  credit_accounts                                                            credit_accounts       @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_ledger_events_account_id_credit_accounts_fk_1")
+  authority_purchases                                                        authority_purchases?  @relation(fields: [authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_ledger_events_authority_purchase_id_authority_purchases_")
+  billing_history_refs                                                       billing_history_refs? @relation(fields: [billing_event_id], references: [billing_event_id], onDelete: NoAction, onUpdate: NoAction, map: "credit_ledger_events_billing_event_id_billing_history_refs_fk_4")
+  cards                                                                      cards?                @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_ledger_events_card_id_cards_fk_5")
+  plan_subscriptions                                                         plan_subscriptions?   @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_ledger_events_plan_subscription_id_plan_subscriptions_fk")
+  credit_topups_credit_topups_ledger_event_idTocredit_ledger_events          credit_topups?        @relation("credit_topups_ledger_event_idTocredit_ledger_events")
+  credit_topups_credit_topups_reversal_ledger_event_idTocredit_ledger_events credit_topups?        @relation("credit_topups_reversal_ledger_event_idTocredit_ledger_events")
+  plan_purchase_orders                                                       plan_purchase_orders?
+
+  @@unique([provider_attempt_id], map: "credit_ledger_events_provider_attempt_usage_unique", where: raw("((provider_attempt_id IS NOT NULL) AND (event_type = 'usage_charge'::text))"))
+  @@index([account_id, created_at], map: "credit_ledger_events_account_created_idx")
+  @@index([authority_purchase_id, event_type], map: "credit_ledger_events_authority_purchase_idx")
+  @@index([billing_event_id], map: "credit_ledger_events_billing_idx")
+  @@index([plan_subscription_id], map: "credit_ledger_events_subscription_idx")
+  @@index([transfer_id], map: "credit_ledger_events_transfer_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model credit_product_listings {
+  id                 String           @id
+  product_id         String
+  payment_channel_id String
+  price_amount_units BigInt
+  status             String
+  created_at         String
+  payment_channels   payment_channels @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_product_listings_payment_channel_id_payment_channels_fk_")
+  credit_products    credit_products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_product_listings_product_id_credit_products_fk_1")
+  credit_topups      credit_topups[]
+
+  @@index([payment_channel_id, status, created_at], map: "credit_product_listings_channel_idx")
+  @@index([product_id, status, created_at], map: "credit_product_listings_product_idx")
+}
+
+model credit_products {
+  id                      String                    @id
+  code                    String                    @unique(map: "credit_products_code_unique")
+  display_name            String
+  description             String?
+  admin_note              String?
+  credited_amount_units   BigInt
+  status                  String
+  display_order           Int                       @default(0)
+  created_at              String
+  admin_grant_batches     admin_grant_batches[]
+  card_activation_batches card_activation_batches[]
+  cards                   cards[]
+  credit_product_listings credit_product_listings[]
+  credit_topups           credit_topups[]
+
+  @@index([status, display_order, created_at], map: "credit_products_status_order_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model credit_topup_attachments {
+  id                  String        @id
+  topup_id            String
+  storage_key         String        @unique(map: "credit_topup_attachments_storage_key_unique")
+  content_type        String
+  byte_size           Int
+  sha256              String
+  uploaded_by_user_id String
+  attachment_purpose  String
+  created_at          String
+  credit_topups       credit_topups @relation(fields: [topup_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topup_attachments_topup_id_credit_topups_fk_1")
+  users               user_controls         @relation(fields: [uploaded_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topup_attachments_uploaded_by_user_id_users_fk_2")
+
+  @@unique([topup_id, sha256, attachment_purpose], map: "credit_topup_attachments_retry_unique")
+  @@index([topup_id, created_at], map: "credit_topup_attachments_topup_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model credit_topups {
+  id                                                                                String                     @id
+  user_id                                                                           String
+  credit_account_id                                                                 String?
+  scope_ref                                                                         String?
+  product_id                                                                        String
+  product_listing_id                                                                String
+  credited_amount_units                                                             BigInt
+  expected_payment_amount_units                                                     BigInt
+  confirmed_received_amount_units                                                   BigInt?
+  payment_asset                                                                     String
+  payment_channel_id                                                                String
+  payment_network                                                                   String
+  settlement_mode                                                                   String
+  recipient_identifier_type                                                         String
+  normalized_recipient_identifier_hash                                              String
+  transaction_reference_type                                                        String
+  transaction_reference                                                             String?
+  normalized_transaction_reference_hash                                             String?
+  transaction_reference_tail                                                        String?
+  claimed_paid_at                                                                   String?
+  payment_submitted_at                                                              String?
+  expires_at                                                                        String
+  expired_at                                                                        String?
+  payment_failed_at                                                                String?
+  credited_at                                                                       String?
+  use_immediately                                                                   Int?
+  card_id                                                                           String?                    @unique(map: "credit_topups_card_unique")
+  status                                                                            String
+  ledger_event_id                                                                   String?                    @unique(map: "credit_topups_ledger_unique")
+  reviewed_by_user_id                                                               String?
+  reviewed_at                                                                       String?
+  review_note                                                                       String?
+  admin_note                                                                        String?
+  refund_note                                                                       String?
+  refund_recorded_by_user_id                                                        String?
+  refund_recorded_at                                                                String?
+  create_idempotency_key_hash                                                       String
+  create_request_hash                                                               String
+  created_at                                                                        String
+  updated_at                                                                        String
+  cancelled_by_user_id                                                              String?
+  cancelled_at                                                                      String?
+  reversed_by_user_id                                                               String?
+  reversed_at                                                                       String?
+  reversal_ledger_event_id                                                          String?                    @unique(map: "credit_topups_reversal_ledger_unique")
+  reversal_reason                                                                   String?
+  credit_topup_attachments                                                          credit_topup_attachments[]
+  users_credit_topups_cancelled_by_user_idTousers                                   user_controls?                     @relation("credit_topups_cancelled_by_user_idTousers", fields: [cancelled_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_cancelled_by_user_id_users_fk_10")
+  cards                                                                             cards?                     @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_card_id_cards_fk_6")
+  credit_accounts                                                                   credit_accounts?           @relation(fields: [credit_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_credit_account_id_credit_accounts_fk_2")
+  credit_ledger_events_credit_topups_ledger_event_idTocredit_ledger_events          credit_ledger_events?      @relation("credit_topups_ledger_event_idTocredit_ledger_events", fields: [ledger_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_ledger_event_id_credit_ledger_events_fk_7")
+  payment_channels                                                                  payment_channels           @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_payment_channel_id_payment_channels_fk_5")
+  credit_products                                                                   credit_products            @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_product_id_credit_products_fk_3")
+  credit_product_listings                                                           credit_product_listings    @relation(fields: [product_listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_product_listing_id_credit_product_listings_fk_4")
+  users_credit_topups_refund_recorded_by_user_idTousers                             user_controls?                     @relation("credit_topups_refund_recorded_by_user_idTousers", fields: [refund_recorded_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_refund_recorded_by_user_id_users_fk_9")
+  credit_ledger_events_credit_topups_reversal_ledger_event_idTocredit_ledger_events credit_ledger_events?      @relation("credit_topups_reversal_ledger_event_idTocredit_ledger_events", fields: [reversal_ledger_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_reversal_ledger_event_id_credit_ledger_events_fk_")
+  users_credit_topups_reversed_by_user_idTousers                                    user_controls?                     @relation("credit_topups_reversed_by_user_idTousers", fields: [reversed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_reversed_by_user_id_users_fk_11")
+  users_credit_topups_reviewed_by_user_idTousers                                    user_controls?                     @relation("credit_topups_reviewed_by_user_idTousers", fields: [reviewed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_reviewed_by_user_id_users_fk_8")
+  users_credit_topups_user_idTousers                                                user_controls                      @relation("credit_topups_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "credit_topups_user_id_users_fk_1")
+  stripe_webhook_events                                                             stripe_webhook_events[]
+
+  @@unique([user_id, create_idempotency_key_hash], map: "credit_topups_create_idempotency_unique")
+  @@index([credit_account_id, created_at], map: "credit_topups_account_created_idx")
+  @@index([scope_ref, created_at], map: "credit_topups_scope_created_idx")
+  @@index([status, created_at], map: "credit_topups_status_created_idx")
+  @@index([user_id, created_at], map: "credit_topups_user_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model credit_transfer_policies {
+  id                   String  @id
+  scope_ref            String  @unique(map: "credit_transfer_policies_scope_unique")
+  transfer_out_enabled Int
+  updated_by           String?
+  created_at           String
+  updated_at           String
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domain_binding_slots {
+  id                     String           @id
+  owner_user_id          String
+  source_order_id        String           @unique(map: "domain_binding_slots_source_order_unique")
+  status                 String
+  consumed_by_binding_id String?
+  created_at             String
+  consumed_at            String?
+  users                  user_controls            @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_binding_slots_owner_user_id_users_fk")
+  service_orders         service_orders   @relation(fields: [source_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_binding_slots_source_order_id_service_orders_fk")
+  domain_bindings        domain_bindings?
+
+  @@index([owner_user_id, status, created_at], map: "domain_binding_slots_owner_status_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domain_binding_teams {
+  domain_binding_id String
+  team_id           String
+  created_at        String
+  domain_bindings   domain_bindings @relation(fields: [domain_binding_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_binding_teams_domain_binding_id_domain_bindings_fk")
+  teams             teams           @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_binding_teams_team_id_teams_fk")
+
+  @@id([domain_binding_id, team_id], map: "domain_binding_teams_pk_1")
+  @@index([team_id, domain_binding_id], map: "domain_binding_teams_team_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domain_bindings {
+  id                                                String                 @id
+  hostname                                          String                 @unique(map: "domain_bindings_hostname_unique")
+  owner_user_id                                     String
+  slot_id                                           String                 @unique(map: "domain_bindings_slot_unique")
+  default_registration_team_id                      String?
+  registration_invite_link_id                       String?
+  status                                            String
+  verification_method                               String
+  verification_token_hash                           String
+  verified_at                                       String?
+  verified_by_user_id                               String?
+  activated_at                                      String?
+  activated_by_user_id                              String?
+  disabled_at                                       String?
+  disabled_by_user_id                               String?
+  released_at                                       String?
+  released_by_user_id                               String?
+  created_at                                        String
+  updated_at                                        String
+  domain_binding_teams                              domain_binding_teams[]
+  users_domain_bindings_activated_by_user_idTousers user_controls?                 @relation("domain_bindings_activated_by_user_idTousers", fields: [activated_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_activated_by_user_id_users_fk")
+  teams                                             teams?                 @relation(fields: [default_registration_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_default_registration_team_id_teams_fk")
+  users_domain_bindings_disabled_by_user_idTousers  user_controls?                 @relation("domain_bindings_disabled_by_user_idTousers", fields: [disabled_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_disabled_by_user_id_users_fk")
+  users_domain_bindings_owner_user_idTousers        user_controls                  @relation("domain_bindings_owner_user_idTousers", fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_owner_user_id_users_fk")
+  team_invite_links                                 team_invite_links?     @relation(fields: [registration_invite_link_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_registration_invite_link_id_team_invite_links_f")
+  users_domain_bindings_released_by_user_idTousers  user_controls?                 @relation("domain_bindings_released_by_user_idTousers", fields: [released_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_released_by_user_id_users_fk")
+  domain_binding_slots                              domain_binding_slots   @relation(fields: [slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_slot_id_domain_binding_slots_fk")
+  users_domain_bindings_verified_by_user_idTousers  user_controls?                 @relation("domain_bindings_verified_by_user_idTousers", fields: [verified_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domain_bindings_verified_by_user_id_users_fk")
+
+  @@index([hostname, status], map: "domain_bindings_active_hostname_idx")
+  @@index([owner_user_id, status, created_at], map: "domain_bindings_owner_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+model friday_relay_task_leases {
+  task_key       String @id
+  owner_id       String
+  fencing_token  BigInt
+  lease_until_ms BigInt
+  updated_at_ms  BigInt
+}
+
+model seller_settlement_backfill_state {
+  backfill_key String @id
+  completed_at String
+}
+
+model friday_relay_pg_schema_meta {
+  lineage          String @id
+  schema_version   Int
+  inventory_digest String
+  applied_at       String
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model friday_relay_shadow_risk_reservations {
+  reservation_id                 String                         @id
+  guard_id                       String
+  status                         String
+  reserved_credit_units          BigInt
+  settled_credit_units           BigInt?
+  acquired_at_ms                 BigInt
+  expires_at_ms                  BigInt
+  terminal_at_ms                 BigInt?
+  terminal_evidence_digest       String?
+  friday_relay_shadow_risk_state friday_relay_shadow_risk_state @relation(fields: [guard_id], references: [guard_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([guard_id, status, acquired_at_ms], map: "friday_relay_shadow_risk_reservations_guard_status_idx")
+}
+
+model friday_relay_shadow_risk_state {
+  guard_id                              String                                  @id
+  profile_digest                        String
+  revision                              BigInt
+  window_started_at_ms                  BigInt
+  request_starts_json                   String
+  updated_at                            String
+  friday_relay_shadow_risk_reservations friday_relay_shadow_risk_reservations[]
+}
+
+model governance_budget_policies {
+  id                               String                             @id
+  metric                           String
+  limit_value                      Float
+  limit_amount_units               BigInt?
+  window_type                      String
+  window_seconds                   Int?
+  status                           String
+  created_at                       String
+  updated_at                       String
+  scope_governance_budget_policies scope_governance_budget_policies[]
+
+  @@index([status])
+  @@index([metric, window_type, status], map: "governance_budget_policies_window_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model history_archive_artifacts {
+  archive_month             String
+  domain                    String
+  schema_version            Int
+  row_count                 Int
+  compressed_bytes          Int
+  uncompressed_bytes        Int
+  object_key                String                      @unique(map: "history_archive_artifacts_object_key_unique")
+  object_sha256             String
+  manifest_object_key       String                      @unique(map: "history_archive_artifacts_manifest_key_unique")
+  manifest_sha256           String
+  source_snapshot_sha256    String
+  created_at                String
+  history_archive_closures  history_archive_closures    @relation(fields: [archive_month], references: [archive_month], onDelete: NoAction, onUpdate: NoAction, map: "history_archive_artifacts_archive_month_history_archive_closure")
+  history_archive_fact_refs history_archive_fact_refs[]
+
+  @@id([archive_month, domain], map: "history_archive_artifacts_pk_1")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model history_archive_closures {
+  archive_month               String                      @id
+  status                      String
+  source_snapshot_sha256      String
+  closure_manifest_object_key String                      @unique(map: "history_archive_closures_manifest_key_unique")
+  closure_manifest_sha256     String?
+  failure_code                String?
+  created_at                  String
+  verified_at                 String?
+  purged_at                   String?
+  history_archive_artifacts   history_archive_artifacts[]
+
+  @@index([status, archive_month], map: "history_archive_closures_status_month_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model history_archive_fact_refs {
+  fact_kind                 String
+  fact_id                   String
+  request_id                String?
+  archive_month             String
+  artifact_domain           String
+  object_sha256             String
+  row_key                   String
+  occurred_at               String
+  actor_type                String?
+  actor_id                  String?
+  action                    String?
+  resource_type             String?
+  resource_id               String?
+  result                    String?
+  source                    String?
+  amount                    Float?
+  amount_units              BigInt?
+  buyer_scope_ref           String?
+  seller_scope_ref          String?
+  provider_owner_scope_ref  String?
+  provider_id               String?
+  created_at                String
+  history_archive_artifacts history_archive_artifacts @relation(fields: [archive_month, artifact_domain], references: [archive_month, domain], onDelete: NoAction, onUpdate: NoAction, map: "history_archive_fact_refs_archive_month_artifact_domain_history")
+
+  @@id([fact_kind, fact_id], map: "history_archive_fact_refs_pk_1")
+  @@index([fact_kind, occurred_at, fact_id], map: "history_archive_fact_refs_audit_query_idx")
+  @@index([fact_kind, buyer_scope_ref, occurred_at], map: "history_archive_fact_refs_buyer_scope_idx")
+  @@index([archive_month, artifact_domain, occurred_at, fact_id], map: "history_archive_fact_refs_month_domain_idx")
+  @@index([fact_kind, provider_owner_scope_ref, occurred_at], map: "history_archive_fact_refs_provider_owner_scope_idx")
+  @@index([request_id, fact_kind], map: "history_archive_fact_refs_request_idx")
+  @@index([fact_kind, seller_scope_ref, occurred_at], map: "history_archive_fact_refs_seller_scope_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model ingress_plugin_settings {
+  id                 String  @id
+  plugin_id          String
+  scope_ref          String
+  enabled            Int
+  config_json        String
+  updated_by_user_id String?
+  created_at         String
+  updated_at         String
+  users              user_controls?  @relation(fields: [updated_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ingress_plugin_settings_updated_by_user_id_users_fk_1")
+
+  @@unique([plugin_id, scope_ref], map: "ingress_plugin_settings_plugin_scope_unique")
+  @@index([scope_ref, plugin_id], map: "ingress_plugin_settings_scope_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model instance_public_hosts {
+  id                 String @id
+  hostname           String
+  enabled            Int    @default(0)
+  created_by_user_id String
+  updated_by_user_id String
+  created_at         String
+  updated_at         String
+
+  @@index([created_at, id], map: "instance_public_hosts_created_idx")
+  @@index([enabled, hostname])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model mcp_orchestration_runs {
+  id                     String                   @id
+  request_id             String                   @unique(map: "mcp_orchestration_runs_request_unique")
+  api_key_id             String
+  user_id                String
+  switch_enabled         Int
+  subscription_set_hash  String
+  status                 String
+  round_count            Int                      @default(0)
+  call_count             Int                      @default(0)
+  charge_units           BigInt                   @default(0)
+  stable_error_code      String?
+  started_at             String
+  ended_at               String?
+  api_keys               api_keys                 @relation(fields: [api_key_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_orchestration_runs_api_key_id_api_keys_fk_2")
+  request_logs           request_logs             @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_orchestration_runs_request_id_request_logs_fk_1")
+  users                  user_controls                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_orchestration_runs_user_id_users_fk_3")
+  mcp_spend_reservations mcp_spend_reservations[]
+  mcp_tool_call_attempts mcp_tool_call_attempts[]
+
+  @@index([api_key_id, started_at], map: "mcp_orchestration_runs_key_started_idx")
+  @@index([status, started_at], map: "mcp_orchestration_runs_status_started_idx")
+  @@index([user_id, started_at], map: "mcp_orchestration_runs_user_started_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model mcp_spend_reservations {
+  id                     String                 @id
+  run_id                 String
+  tool_call_attempt_id   String                 @unique(map: "mcp_spend_reservations_attempt_unique")
+  plan_subscription_id   String
+  account_id             String
+  reserved_units         BigInt
+  consumed_units         BigInt                 @default(0)
+  status                 String
+  expires_at             String
+  created_at             String
+  terminal_at            String?
+  credit_accounts        credit_accounts        @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_spend_reservations_account_id_credit_accounts_fk_4")
+  plan_subscriptions     plan_subscriptions     @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_spend_reservations_plan_subscription_id_plan_subscriptions_")
+  mcp_orchestration_runs mcp_orchestration_runs @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_spend_reservations_run_id_mcp_orchestration_runs_fk_1")
+  mcp_tool_call_attempts mcp_tool_call_attempts @relation(fields: [tool_call_attempt_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_spend_reservations_tool_call_attempt_id_mcp_tool_call_attem")
+
+  @@index([account_id, status, expires_at], map: "mcp_spend_reservations_account_status_idx")
+  @@index([run_id, created_at], map: "mcp_spend_reservations_run_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model mcp_tool_call_attempts {
+  id                     String                  @id
+  run_id                 String
+  sequence               Int
+  plan_id                String
+  plan_subscription_id   String
+  plan_mcp_tool_id       String
+  public_tool_alias      String
+  upstream_tool_name     String
+  connector_id           String
+  risk                   String
+  status                 String
+  charge_units           BigInt                  @default(0)
+  stable_error_code      String?
+  started_at             String
+  ended_at               String?
+  mcp_spend_reservations mcp_spend_reservations?
+  plans                  plans                   @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_tool_call_attempts_plan_id_plans_fk_2")
+  plan_mcp_tools         plan_mcp_tools          @relation(fields: [plan_mcp_tool_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_tool_call_attempts_plan_mcp_tool_id_plan_mcp_tools_fk_4")
+  plan_subscriptions     plan_subscriptions      @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_tool_call_attempts_plan_subscription_id_plan_subscriptions_")
+  mcp_orchestration_runs mcp_orchestration_runs  @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mcp_tool_call_attempts_run_id_mcp_orchestration_runs_fk_1")
+
+  @@unique([run_id, sequence], map: "mcp_tool_call_attempts_run_sequence_unique")
+  @@index([run_id, sequence], map: "mcp_tool_call_attempts_run_idx")
+  @@index([plan_subscription_id, started_at], map: "mcp_tool_call_attempts_subscription_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model oidc_access_tokens {
+  id         String  @id
+  token_hash String  @unique(map: "oidc_access_tokens_hash_unique")
+  user_id    String
+  client_id  String
+  audience   String
+  scope      String
+  created_at String
+  expires_at String
+  revoked_at String?
+  users      user_controls   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "oidc_access_tokens_user_id_users_fk_1")
+
+  @@index([expires_at], map: "oidc_access_tokens_expiry_idx")
+  @@index([user_id], map: "oidc_access_tokens_user_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model oidc_authorization_codes {
+  id             String  @id
+  code_hash      String  @unique(map: "oidc_authorization_codes_hash_unique")
+  user_id        String
+  client_id      String
+  redirect_uri   String
+  scope          String
+  code_challenge String
+  nonce          String
+  created_at     String
+  expires_at     String
+  consumed_at    String?
+  users          user_controls   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "oidc_authorization_codes_user_id_users_fk_1")
+
+  @@index([expires_at], map: "oidc_authorization_codes_expiry_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model oidc_refresh_tokens {
+  id             String  @id
+  token_hash     String  @unique(map: "oidc_refresh_tokens_hash_unique")
+  family_id      String
+  user_id        String
+  client_id      String
+  scope          String
+  created_at     String
+  expires_at     String
+  consumed_at    String?
+  revoked_at     String?
+  replaced_by_id String?
+  users          user_controls   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "oidc_refresh_tokens_user_id_users_fk_1")
+
+  @@index([expires_at], map: "oidc_refresh_tokens_expiry_idx")
+  @@index([family_id], map: "oidc_refresh_tokens_family_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model partner_operating_entitlements {
+  id                   String             @id
+  source_order_id      String             @unique(map: "partner_operating_entitlements_order_unique")
+  owner_user_id        String
+  partner_team_id      String
+  partner_plan_id      String
+  plan_subscription_id String             @unique(map: "partner_operating_entitlements_subscription_unique")
+  effective_start      String
+  effective_end        String
+  lifecycle            String
+  created_at           String
+  users                user_controls              @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_operating_entitlements_owner_user_id_users_fk_2")
+  plans                plans              @relation(fields: [partner_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_operating_entitlements_partner_plan_id_plans_fk_4")
+  teams                teams              @relation(fields: [partner_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_operating_entitlements_partner_team_id_teams_fk_3")
+  plan_subscriptions   plan_subscriptions @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_operating_entitlements_plan_subscription_id_plan_subscr")
+  service_orders       service_orders     @relation(fields: [source_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_operating_entitlements_source_order_id_service_orders_f")
+
+  @@index([partner_team_id, lifecycle, effective_start, effective_end], map: "partner_operating_entitlements_team_effective_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model partner_team_creation_allocations {
+  id               String         @id
+  source_order_id  String         @unique(map: "partner_team_creation_allocations_order_unique")
+  owner_user_id    String
+  partner_plan_id  String
+  duration_seconds Int
+  consumed_team_id String?
+  consumed_at      String?
+  created_at       String
+  teams            teams?         @relation(fields: [consumed_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_team_creation_allocations_consumed_team_id_teams_fk_4")
+  users            user_controls          @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_team_creation_allocations_owner_user_id_users_fk_2")
+  plans            plans          @relation(fields: [partner_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_team_creation_allocations_partner_plan_id_plans_fk_3")
+  service_orders   service_orders @relation(fields: [source_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_team_creation_allocations_source_order_id_service_order")
+
+  @@index([owner_user_id, created_at], map: "partner_team_creation_allocations_owner_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model passkey_credentials {
+  id              String  @id
+  user_id         String
+  credential_id   String  @unique(map: "passkey_credentials_credential_unique")
+  public_key      String
+  sign_count      Int
+  transports_json String  @default("[]")
+  device_type     String
+  backed_up       Int
+  rp_id           String
+  name            String
+  created_at      String
+  last_used_at    String?
+  updated_at      String
+  users           user_controls   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "passkey_credentials_user_id_users_fk_1")
+
+  @@index([user_id, created_at], map: "passkey_credentials_user_idx")
+  @@index([user_id, rp_id, created_at], map: "passkey_credentials_user_rp_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model payment_channel_instruction_attachments {
+  id                 String           @id
+  payment_channel_id String
+  storage_key        String           @unique(map: "payment_channel_instruction_attachments_storage_key_unique")
+  content_type       String
+  byte_size          Int
+  sha256             String
+  created_by_user_id String
+  created_at         String
+  users              user_controls            @relation(fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_channel_instruction_attachments_created_by_user_id_user")
+  payment_channels   payment_channels @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_channel_instruction_attachments_payment_channel_id_paym")
+
+  @@index([payment_channel_id, created_at], map: "payment_channel_instruction_attachments_channel_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model payment_channels {
+  id                                      String                                    @id
+  code                                    String                                    @unique(map: "payment_channels_code_unique")
+  display_name                            String
+  payment_network                         String
+  payment_asset                           String
+  settlement_mode                         String
+  recipient_identifier_type               String
+  transaction_reference_type              String
+  recipient_identifier                    String
+  recipient_identifier_display            String
+  normalized_recipient_identifier_hash    String
+  payment_instruction                     String?
+  status                                  String
+  created_by_user_id                      String
+  created_at                              String
+  credit_product_listings                 credit_product_listings[]
+  credit_topups                           credit_topups[]
+  payment_channel_instruction_attachments payment_channel_instruction_attachments[]
+  users                                   user_controls                                     @relation(fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_channels_created_by_user_id_users_fk_1")
+  plan_payment_listings                   plan_payment_listings[]
+  plan_purchase_orders                    plan_purchase_orders[]
+  service_orders                          service_orders[]
+  service_product_listings                service_product_listings[]
+
+  @@index([status, created_at], map: "payment_channels_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model pipeline_plugin_settings {
+  id                 String  @id
+  plugin_id          String
+  scope_ref          String
+  enabled            Int
+  config_json        String
+  setting_revision   Int     @default(1)
+  config_revision    Int     @default(1)
+  updated_by_user_id String?
+  created_at         String
+  updated_at         String
+  users              user_controls?  @relation(fields: [updated_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pipeline_plugin_settings_updated_by_user_id_users_fk_1")
+
+  @@unique([plugin_id, scope_ref], map: "pipeline_plugin_settings_plugin_scope_unique")
+  @@index([scope_ref, plugin_id], map: "pipeline_plugin_settings_scope_idx")
+}
+
+/// This table contains check constraints and transition triggers that require additional migration setup.
+model pi_tunnel_devices {
+  id                            String  @id
+  lifecycle                     String
+  activation_code_hash          String
+  activation_expires_at         String
+  activation_attempts_remaining Int
+  node_id                       String? @unique(map: "pi_tunnel_devices_node_id_unique")
+  node_public_key_spki          String?
+  node_key_thumbprint           String? @unique(map: "pi_tunnel_devices_node_thumbprint_unique")
+  activated_at                  String?
+  revoked_at                    String?
+  revocation_reason             String?
+  created_at                    String
+
+  @@index([lifecycle, activation_expires_at, id], map: "pi_tunnel_devices_activation_idx")
+  @@index([lifecycle, revoked_at, id], map: "pi_tunnel_devices_lifecycle_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_access_point_price_tiers {
+  id                              String                   @id
+  plan_access_point_price_id      String
+  service_tier                    String                   @default("standard")
+  tier_key                        String
+  min_input_tokens                BigInt
+  max_input_tokens                BigInt?
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  status                          String
+  created_at                      String
+  updated_at                      String
+  plan_access_point_prices        plan_access_point_prices @relation(fields: [plan_access_point_price_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_access_point_price_tiers_plan_access_point_price_id_plan_a")
+
+  @@unique([plan_access_point_price_id, service_tier, tier_key], map: "plan_access_point_price_tiers_unique")
+  @@index([plan_access_point_price_id, service_tier, status, min_input_tokens], map: "plan_access_point_price_tiers_parent_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_access_point_prices {
+  id                              String                          @id
+  plan_id                         String
+  access_point_id                 String
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  status                          String
+  created_at                      String
+  updated_at                      String
+  plan_access_point_price_tiers   plan_access_point_price_tiers[]
+  AccessPoint                     AccessPoint                     @relation(fields: [access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_access_point_prices_access_point_id_access_points_fk_2")
+  plans                           plans                           @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_access_point_prices_plan_id_plans_fk_1")
+
+  @@index([access_point_id], map: "plan_access_point_prices_access_point_idx")
+  @@index([plan_id, access_point_id, status], map: "plan_access_point_prices_lookup_idx")
+  @@index([plan_id, access_point_id, status, created_at, id], map: "plan_access_point_prices_lookup_latest_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_access_points {
+  id              String      @id
+  plan_id         String
+  access_point_id String
+  created_at      String
+  AccessPoint     AccessPoint @relation(fields: [access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_access_points_access_point_id_access_points_fk_2")
+  plans           plans       @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_access_points_plan_id_plans_fk_1")
+
+  @@unique([plan_id, access_point_id], map: "plan_access_points_unique")
+  @@index([access_point_id], map: "plan_access_points_access_point_idx")
+  @@index([plan_id], map: "plan_access_points_plan_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model plan_budget_limits {
+  id                 String  @id
+  plan_id            String
+  limit_scope        String  @default("subscription")
+  metric             String
+  limit_value        Float
+  limit_amount_units BigInt?
+  window_type        String
+  window_seconds     Int?
+  created_at         String
+  plans              plans   @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_budget_limits_plan_id_plans_fk_1")
+
+  @@index([plan_id], map: "plan_budget_limits_plan_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_mcp_tools {
+  id                     String                   @id
+  plan_id                String
+  connector_id           String
+  connector_revision     Int                      @default(1)
+  public_tool_alias      String
+  upstream_tool_name     String
+  input_schema_json      String                   @default("{}")
+  risk                   String
+  idempotent             Int                      @default(0)
+  auto_executable        Int                      @default(0)
+  charge_units           BigInt                   @default(0)
+  max_argument_bytes     Int                      @default(32768)
+  max_result_bytes       Int                      @default(65536)
+  status                 String                   @default("enabled")
+  created_at             String
+  updated_at             String
+  mcp_tool_call_attempts mcp_tool_call_attempts[]
+  plans                  plans                    @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_mcp_tools_plan_id_plans_fk_1")
+
+  @@unique([plan_id, public_tool_alias], map: "plan_mcp_tools_plan_alias_unique")
+  @@index([connector_id, connector_revision, status], map: "plan_mcp_tools_connector_idx")
+  @@index([plan_id, status, created_at], map: "plan_mcp_tools_plan_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_payment_listings {
+  id                   String                 @id
+  plan_id              String
+  payment_channel_id   String
+  price_amount_units   BigInt
+  status               String
+  created_at           String
+  payment_channels     payment_channels       @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_payment_listings_payment_channel_id_payment_channels_fk_2")
+  plans                plans                  @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_payment_listings_plan_id_plans_fk_1")
+  plan_purchase_orders plan_purchase_orders[]
+
+  @@unique([plan_id, payment_channel_id], map: "plan_payment_listings_enabled_unique", where: raw("(status = 'enabled'::text)"))
+  @@index([payment_channel_id, status, created_at], map: "plan_payment_listings_channel_idx")
+  @@index([plan_id, status, created_at], map: "plan_payment_listings_plan_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_purchase_orders {
+  id                                                    String                  @id
+  buyer_user_id                                         String
+  plan_id                                               String
+  plan_payment_listing_id                               String?
+  payment_channel_id                                    String?
+  payment_kind                                          String
+  payment_network                                       String
+  payment_asset                                         String
+  expected_payment_amount_units                         BigInt
+  stripe_amount_minor                                   BigInt?
+  canonical_purchase_amount_units                       BigInt
+  use_immediately                                       Int
+  status                                                String
+  checkout_session_id                                   String?                 @unique(map: "plan_purchase_orders_checkout_session_unique", where: raw("(checkout_session_id IS NOT NULL)"))
+  payment_intent_id                                     String?                 @unique(map: "plan_purchase_orders_payment_intent_unique", where: raw("(payment_intent_id IS NOT NULL)"))
+  card_id                                               String?                 @unique(map: "plan_purchase_orders_card_unique", where: raw("(card_id IS NOT NULL)"))
+  credit_ledger_event_id                                String?                 @unique(map: "plan_purchase_orders_credit_ledger_unique", where: raw("(credit_ledger_event_id IS NOT NULL)"))
+  subscription_id                                       String?                 @unique(map: "plan_purchase_orders_subscription_unique", where: raw("(subscription_id IS NOT NULL)"))
+  expires_at                                            String?
+  fulfilled_at                                          String?
+  payment_failed_at                                     String?
+  cancelled_at                                          String?
+  expired_at                                            String?
+  reversed_at                                           String?
+  reversed_by_user_id                                   String?
+  reversal_reason                                       String?
+  create_idempotency_key_hash                           String
+  create_request_hash                                   String
+  created_at                                            String
+  updated_at                                            String
+  users_plan_purchase_orders_buyer_user_idTousers       user_controls                   @relation("plan_purchase_orders_buyer_user_idTousers", fields: [buyer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_buyer_user_id_users_fk_1")
+  cards                                                 cards?                  @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_card_id_cards_fk_5")
+  credit_ledger_events                                  credit_ledger_events?   @relation(fields: [credit_ledger_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_credit_ledger_event_id_credit_ledger_event")
+  payment_channels                                      payment_channels?       @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_payment_channel_id_payment_channels_fk_4")
+  plans                                                 plans                   @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_plan_id_plans_fk_2")
+  plan_payment_listings                                 plan_payment_listings?  @relation(fields: [plan_payment_listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_plan_payment_listing_id_plan_payment_listi")
+  users_plan_purchase_orders_reversed_by_user_idTousers user_controls?                  @relation("plan_purchase_orders_reversed_by_user_idTousers", fields: [reversed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_reversed_by_user_id_users_fk_8")
+  plan_subscriptions                                    plan_subscriptions?     @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_purchase_orders_subscription_id_plan_subscriptions_fk_7")
+  stripe_webhook_events                                 stripe_webhook_events[]
+
+  @@unique([buyer_user_id, create_idempotency_key_hash], map: "plan_purchase_orders_buyer_idempotency_unique")
+  @@index([buyer_user_id, created_at, id], map: "plan_purchase_orders_buyer_created_idx")
+  @@index([payment_asset, created_at, id], map: "plan_purchase_orders_currency_created_idx")
+  @@index([plan_id, created_at, id], map: "plan_purchase_orders_plan_created_idx")
+  @@index([status, created_at, id], map: "plan_purchase_orders_status_created_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_subscriptions {
+  id                               String                             @id
+  plan_id                          String
+  source                           String
+  scope_ref                        String
+  purchased_by_user_id             String?
+  funding_account_id               String?
+  origin_card_id                   String?                            @unique(map: "plan_subscriptions_origin_card_unique")
+  priority                         Int
+  effective_start                  String
+  effective_end                    String?
+  subscription_lifecycle           String
+  created_at                       String
+  updated_at                       String
+  admin_grant_batch_items          admin_grant_batch_items[]
+  billing_events                   billing_events[]
+  credit_ledger_events             credit_ledger_events[]
+  mcp_spend_reservations           mcp_spend_reservations[]
+  mcp_tool_call_attempts           mcp_tool_call_attempts[]
+  partner_operating_entitlements   partner_operating_entitlements?
+  plan_purchase_orders             plan_purchase_orders?
+  selectedRequestExecutions        request_executions[]               @relation("request_executions_selected_plan_subscription_idToplan_subscriptions")
+  cards                            cards?                             @relation(fields: [origin_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_subscriptions_origin_card_id_cards_fk_2")
+  plans                            plans                              @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_subscriptions_plan_id_plans_fk_1")
+  request_logs                     request_logs[]
+  seller_settlement_events         seller_settlement_events[]
+  seller_settlement_windows        seller_settlement_windows[]
+  user_provider_entitlement_period user_provider_entitlement_periods?
+
+  @@index([scope_ref, subscription_lifecycle, priority, effective_start, created_at], map: "plan_subscriptions_active_lookup_idx")
+  @@index([funding_account_id], map: "plan_subscriptions_funding_account_idx")
+  @@index([plan_id], map: "plan_subscriptions_plan_idx")
+  @@index([scope_ref, subscription_lifecycle, effective_start, effective_end], map: "plan_subscriptions_scope_effective_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model plans {
+  id                                String                              @id
+  owner_id                          String
+  scope_ref                         String
+  name                              String
+  version                           Int
+  description                       String?
+  admin_note                        String?
+  billing_mode                      String                              @default("prepaid")
+  purchase_amount                   Float
+  purchase_amount_units             BigInt
+  duration_seconds                  Int
+  plan_status                       String
+  catalog_status                    String                              @default("unlisted")
+  created_at                        String
+  updated_at                        String
+  admin_grant_batches               admin_grant_batches[]
+  card_activation_batches           card_activation_batches[]
+  cards                             cards[]
+  mcp_tool_call_attempts            mcp_tool_call_attempts[]
+  partner_operating_entitlements    partner_operating_entitlements[]
+  partner_team_creation_allocations partner_team_creation_allocations[]
+  plan_access_point_prices          plan_access_point_prices[]
+  plan_access_points                plan_access_points[]
+  plan_budget_limits                plan_budget_limits[]
+  plan_mcp_tools                    plan_mcp_tools[]
+  plan_payment_listings             plan_payment_listings[]
+  plan_purchase_orders              plan_purchase_orders[]
+  plan_subscriptions                plan_subscriptions[]
+  request_logs                      request_logs[]
+  service_orders                    service_orders[]
+  service_products                  service_products[]
+  user_model_plan_scope_orders      user_model_plan_scope_orders[]
+  personal_provider_slot            user_provider_slots?
+
+  @@unique([name, version], map: "plans_name_version_unique")
+  @@index([catalog_status, plan_status], map: "plans_catalog_idx")
+  @@index([owner_id, plan_status], map: "plans_owner_idx")
+  @@index([scope_ref, plan_status], map: "plans_scope_idx")
+  @@index([plan_status], map: "plans_status_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provider_bindings {
+  provider_id          String    @id
+  auth_method          String
+  credential_ownership String
+  credential_refs_json String    @default("[]")
+  credential_preview   String?
+  revision             Int       @default(1)
+  sync_status          String
+  error_code           String?
+  created_at           String
+  updated_at           String
+  providers            providers @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provider_bindings_provider_id_providers_fk_1")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provider_model_cost_tiers {
+  id                              String               @id
+  provider_model_cost_id          String
+  service_tier                    String               @default("standard")
+  tier_key                        String
+  min_input_tokens                BigInt
+  max_input_tokens                BigInt?
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  status                          String
+  created_at                      String
+  updated_at                      String
+  provider_model_costs            provider_model_costs @relation(fields: [provider_model_cost_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provider_model_cost_tiers_provider_model_cost_id_provider_model")
+
+  @@unique([provider_model_cost_id, service_tier, tier_key], map: "provider_model_cost_tiers_unique")
+  @@index([provider_model_cost_id, service_tier, status, min_input_tokens], map: "provider_model_cost_tiers_parent_idx")
+}
+
+model provider_model_costs {
+  id                              String                         @id
+  provider_id                     String
+  provider_model_name             String
+  input_per_1m                    Float
+  cached_input_per_1m             Float
+  cache_write_per_1m              Float?
+  output_per_1m                   Float
+  input_price_units_per_1m        BigInt
+  cached_input_price_units_per_1m BigInt
+  cache_write_price_units_per_1m  BigInt?
+  output_price_units_per_1m       BigInt
+  source                          String
+  status                          String
+  created_at                      String
+  updated_at                      String
+  billing_events                  billing_events[]
+  billing_provider_cost_events    billing_provider_cost_events[]
+  provider_model_cost_tiers       provider_model_cost_tiers[]
+
+  @@index([provider_id, provider_model_name, status], map: "provider_model_costs_lookup_idx")
+  @@index([provider_id, provider_model_name, status, created_at, id], map: "provider_model_costs_lookup_latest_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provider_models {
+  id                       String                      @id
+  provider_id              String
+  provider_model_name      String
+  display_name             String
+  status                   String
+  created_at               String
+  updated_at               String
+  providers                providers                   @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provider_models_provider_id_providers_fk_1")
+  stableAccessPointTargets AccessPointTarget[]         @relation("access_point_targets_target_provider_model_idToprovider_models")
+  requestProviderAttempts  request_provider_attempts[] @relation("request_provider_attempts_provider_model_idToprovider_models")
+
+  @@unique([provider_id, provider_model_name], map: "provider_models_provider_identity_unique")
+  @@index([provider_id], map: "provider_models_provider_idx")
+}
+
+model provider_retirement_archives {
+  id                  String @id
+  provider_id         String
+  schema_version      Int
+  object_key          String
+  object_sha256       String
+  manifest_object_key String
+  manifest_sha256     String
+  actor_type          String
+  actor_id            String
+  request_id          String
+  reason              String
+  created_at          String
+
+  @@index([provider_id, created_at], map: "provider_retirement_archives_provider_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model providers {
+  id                           String                         @id
+  owner_id                     String
+  scope_ref                    String
+  name                         String
+  kind                         String
+  status                       String
+  base_url_resolver            String
+  credential_resolver          String
+  models_resolver              String
+  config_json                  String
+  cpa_instance_id              String                         @default("cpa_default")
+  created_at                   String
+  updated_at                   String
+  AccessPointTarget            AccessPointTarget[]
+  billing_provider_cost_events billing_provider_cost_events[]
+  provider_bindings            provider_bindings?
+  provider_models              provider_models[]
+  cpa_instances                cpa_instances                  @relation(fields: [cpa_instance_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "providers_cpa_instance_id_cpa_instances_fk_1")
+  request_provider_attempts    request_provider_attempts[]
+  personal_provider_slot       user_provider_slots?
+
+  @@index([cpa_instance_id, status], map: "providers_cpa_instance_idx")
+  @@index([owner_id, status], map: "providers_owner_idx")
+  @@index([scope_ref, status], map: "providers_scope_idx")
+}
+
+model rate_limit_policies {
+  id                        String                      @id
+  metric                    String
+  limit_value               Float
+  window_seconds            Int
+  burst_value               Float
+  mode                      String
+  status                    String
+  created_at                String
+  scope_rate_limit_policies scope_rate_limit_policies[]
+
+  @@index([mode, status], map: "rate_limit_policies_mode_idx")
+  @@index([status])
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model refresh_tokens {
+  id         String  @id
+  user_id    String
+  token_hash String  @unique(map: "refresh_tokens_hash_unique")
+  expires_at String
+  revoked_at String?
+  created_at String
+  users      user_controls   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "refresh_tokens_user_id_users_fk_1")
+}
+
+model request_capture_download_slots {
+  slot_id     Int     @id @default(autoincrement())
+  owner_token String?
+  acquired_at String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model request_capture_settings {
+  id         String  @id
+  enabled    Int
+  updated_by String?
+  created_at String
+  updated_at String
+}
+
+model request_execution_leases {
+  request_id   String @id
+  owner_id     String
+  acquired_at  String
+  heartbeat_at String
+  lease_until  String
+
+  @@index([lease_until, request_id], map: "request_execution_leases_expiry_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model request_log_archive_entries {
+  request_id           String               @id
+  user_id              String
+  api_key_id           String
+  team_id              String?
+  started_at           String
+  status               String
+  req_model            String
+  ingress_hostname     String?
+  ingress_route_id     String?
+  archive_month        String
+  request_log_archives request_log_archives @relation(fields: [archive_month], references: [archive_month], onDelete: NoAction, onUpdate: NoAction, map: "request_log_archive_entries_archive_month_request_log_archives_")
+
+  @@index([archive_month, started_at, request_id], map: "request_log_archive_entries_archive_started_idx")
+  @@index([ingress_hostname, started_at, request_id], map: "request_log_archive_entries_ingress_started_idx")
+  @@index([api_key_id, started_at, request_id], map: "request_log_archive_entries_key_started_idx")
+  @@index([team_id, started_at, request_id], map: "request_log_archive_entries_team_started_idx")
+  @@index([user_id, started_at, request_id], map: "request_log_archive_entries_user_started_idx")
+}
+
+model request_log_archives {
+  archive_month               String                        @id
+  format_version              Int
+  schema_version              Int
+  status                      String
+  row_count                   Int
+  compressed_bytes            Int
+  uncompressed_bytes          Int
+  object_key                  String
+  object_sha256               String
+  manifest_object_key         String
+  manifest_sha256             String
+  created_at                  String
+  uploaded_at                 String?
+  verified_at                 String?
+  purged_at                   String?
+  request_log_archive_entries request_log_archive_entries[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model request_logs {
+  id                           String                         @id
+  api_key_id                   String
+  user_id                      String
+  team_id                      String?
+  plan_id                      String?
+  plan_subscription_id         String?
+  entry_access_point_id        String?
+  billing_scope_ref            String?
+  provider_id                  String?
+  request_path                 String?
+  ingress_hostname             String?
+  ingress_route_id             String?
+  req_model                    String
+  tar_model                    String?
+  ingress_plugins_json         String                         @default("[]")
+  pipeline_plugins_json        String                         @default("{\"schemaVersion\":1,\"planRevision\":\"pending\",\"invocations\":[]}")
+  status                       String
+  error_code                   String?
+  credential_failure_reason    String?
+  started_at                   String
+  ended_at                     String?
+  billing_access_point_edges   billing_access_point_edges[]
+  billing_events               billing_events[]
+  billing_provider_cost_events billing_provider_cost_events[]
+  mcp_orchestration_runs       mcp_orchestration_runs?
+  api_keys                     api_keys                       @relation(fields: [api_key_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_api_key_id_api_keys_fk_1")
+  AccessPoint                  AccessPoint?                   @relation(fields: [entry_access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_entry_access_point_id_access_points_fk_6")
+  plans                        plans?                         @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_plan_id_plans_fk_4")
+  plan_subscriptions           plan_subscriptions?            @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_plan_subscription_id_plan_subscriptions_fk_5")
+  teams                        teams?                         @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_team_id_teams_fk_3")
+  users                        user_controls                          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_logs_user_id_users_fk_2")
+  request_provider_attempts    request_provider_attempts[]
+
+  @@index([ingress_hostname, started_at, id], map: "request_logs_ingress_started_idx")
+  @@index([api_key_id, started_at], map: "request_logs_key_started_idx")
+  @@index([started_at], map: "request_logs_started_idx")
+  @@index([status, started_at], map: "request_logs_status_started_idx")
+  @@index([team_id, started_at], map: "request_logs_team_started_idx")
+  @@index([user_id, started_at], map: "request_logs_user_started_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model request_provider_attempts {
+  id                                String                         @id
+  request_id                        String
+  attempt_index                     Int
+  selector_access_point_id          String
+  selector_id                       String
+  selector_behavior_version         Int
+  routing_revision                  Int
+  candidate_id                      String
+  selector_target_edge_id           String
+  path_target_edge_ids_json         String
+  access_point_chain_ids_json       String
+  provider_id                       String
+  provider_model_id                 String
+  provider_model_name               String
+  outcome                           String
+  failure_class                     String?
+  failure_reason                    String?
+  output_committed                  Int                            @default(0)
+  trusted_usage_source              String?
+  started_at                        String
+  ended_at                          String?
+  execution_owner_id                String
+  admission_lease_until             String
+  cost_exposure                     String                         @default("not_started")
+  final_usage_evidence              String                         @default("pending")
+  usage_settled                     Int                            @default(0)
+  reconciliation_reason             String?
+  invocation_contract               String                         @default("protected@1")
+  plan_subscription_id              String?
+  api_key_id                        String?
+  user_id                           String?
+  usage_charge_account_id           String?
+  require_service_tier              Int                            @default(0)
+  billable_price_profile_json       String?
+  provider_cost_profile_json        String?
+  access_point_price_profiles_json  String?
+  billable_price_source             String
+  billable_price_id                 String
+  billable_price_tier_key           String?
+  billable_price_snapshot_json      String?
+  routing_revisions_json            String
+  input_tokens                      BigInt?
+  max_output_tokens                 BigInt?
+  tokenizer_id                      String?
+  tokenizer_version                 Int?
+  preparation_evidence_id           String?
+  preparation_evidence_version      Int?
+  prepared_payload_id               String?
+  requested_service_tier            String
+  billing_scope_ref                 String
+  plan_seller_scope_ref             String
+  plan_billing_mode                 String
+  subscription_effective_start      String
+  provider_owner_scope_ref          String
+  provider_model_cost_id            String
+  provider_cost_tier_key            String?
+  provider_cost_snapshot_json       String?
+  access_point_price_snapshots_json String?
+  billing_provider_cost_events      billing_provider_cost_events[]
+  provider_models                   provider_models                @relation("request_provider_attempts_provider_model_idToprovider_models", fields: [provider_model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_provider_attempts_provider_model_fk")
+  providers                         providers                      @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_provider_attempts_provider_id_providers_fk_4")
+  request_logs                      request_logs                   @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_provider_attempts_request_id_request_logs_fk_1")
+  AccessPoint                       AccessPoint                    @relation(fields: [selector_access_point_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_provider_attempts_selector_access_point_id_access_point")
+  AccessPointTarget                 AccessPointTarget              @relation(fields: [selector_target_edge_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_provider_attempts_selector_target_edge_id_access_point_")
+
+  @@unique([request_id, candidate_id], map: "request_provider_attempts_request_candidate_unique")
+  @@unique([request_id, attempt_index], map: "request_provider_attempts_request_index_unique")
+  @@index([provider_id, started_at], map: "request_provider_attempts_provider_started_idx")
+  @@index([provider_model_id, started_at, id], map: "request_provider_attempts_provider_model_started_idx")
+  @@index([request_id, attempt_index], map: "request_provider_attempts_request_idx")
+}
+
+model request_executions {
+  request_id                    String              @id
+  status                        String
+  owner_id                      String
+  attempt_count                 Int                 @default(0)
+  output_committed              Int                 @default(0)
+  terminal_error_code           String?
+  started_at                    String
+  ended_at                      String?
+  selected_plan_subscription_id String?
+  selectedPlanSubscription      plan_subscriptions? @relation("request_executions_selected_plan_subscription_idToplan_subscriptions", fields: [selected_plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "request_executions_selected_plan_subscription_fk")
+
+  @@index([status, started_at, request_id], map: "request_executions_status_started_idx")
+  @@index([selected_plan_subscription_id, started_at, request_id], map: "request_executions_selected_plan_subscription_idx", where: raw("(selected_plan_subscription_id IS NOT NULL)"))
+}
+
+model budget_claims {
+  provider_attempt_id  String @id
+  request_id           String
+  plan_id              String
+  plan_subscription_id String
+  api_key_id           String
+  user_id              String
+  max_total_tokens     BigInt
+  max_charge_units     BigInt
+  created_at           String
+
+  @@index([plan_subscription_id, provider_attempt_id], map: "budget_claims_settlement_idx")
+  @@index([plan_subscription_id, user_id, provider_attempt_id], map: "budget_claims_subscription_idx")
+  @@index([api_key_id, provider_attempt_id], map: "budget_claims_api_key_idx")
+}
+
+model usage_reservations {
+  id                           String  @id
+  provider_attempt_id          String  @unique
+  request_id                   String
+  credit_account_id            String
+  plan_subscription_id         String
+  user_id                      String
+  status                       String
+  reservation_units            BigInt
+  held_units                   BigInt
+  input_tokens                 BigInt
+  max_output_tokens            BigInt
+  tokenizer_id                 String
+  tokenizer_version            Int
+  preparation_evidence_id      String?
+  preparation_evidence_version Int?
+  prepared_payload_id          String?
+  service_tier                 String
+  billable_price_source        String
+  billable_price_id            String
+  billable_price_tier_key      String
+  price_snapshot_json          String
+  posting_ledger_event_id      String?
+  created_at                   String
+  updated_at                   String
+
+  @@index([credit_account_id, status, id], map: "usage_reservations_account_active_idx", where: raw("(status = ANY (ARRAY['active'::text, 'reconciling'::text]))"))
+  @@index([user_id, status, id], map: "usage_reservations_user_active_idx", where: raw("(status = ANY (ARRAY['active'::text, 'reconciling'::text]))"))
+}
+
+model provider_invocation_usage_facts {
+  provider_attempt_id     String  @id
+  request_id              String
+  plan_subscription_id    String
+  api_key_id              String
+  user_id                 String
+  input_tokens            BigInt
+  cached_input_tokens     BigInt
+  cache_write_tokens      BigInt
+  output_tokens           BigInt
+  total_tokens            BigInt
+  actual_charge_units     BigInt
+  usage_source            String
+  price_snapshot_json     String
+  occurred_at             String
+  settled_at              String
+  posting_ledger_event_id String?
+  billing_event_id        String  @unique(map: "billing_events_provider_attempt_unique")
+
+  @@index([plan_subscription_id, user_id, occurred_at, provider_attempt_id], map: "provider_invocation_usage_facts_subscription_idx")
+  @@index([api_key_id, occurred_at, provider_attempt_id], map: "provider_invocation_usage_facts_api_key_idx")
+}
+
+model resource_permissions {
+  id            String  @id
+  resource_type String
+  resource_id   String
+  action        String
+  subject_type  String
+  subject_ref   String
+  subject_role  String?
+  status        String
+  created_at    String
+  updated_at    String
+
+  @@unique([resource_type, resource_id, action, subject_type, subject_ref, subject_role], map: "resource_permissions_lookup_unique")
+  @@index([resource_type, resource_id, action, status], map: "resource_permissions_resource_idx")
+  @@index([subject_type, subject_ref, subject_role, status], map: "resource_permissions_subject_idx")
+}
+
+model schema_meta {
+  key        String @id
+  value      String
+  updated_at String
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model scope_budget_policies {
+  id               String          @id
+  scope_ref        String
+  budget_policy_id String
+  status           String
+  created_at       String
+  updated_at       String
+  budget_policies  budget_policies @relation(fields: [budget_policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scope_budget_policies_budget_policy_id_budget_policies_fk_1")
+
+  @@index([budget_policy_id], map: "scope_budget_policies_policy_idx")
+  @@index([scope_ref, status], map: "scope_budget_policies_scope_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model scope_governance_budget_policies {
+  id                          String                     @id
+  scope_ref                   String
+  governance_budget_policy_id String
+  status                      String
+  created_at                  String
+  updated_at                  String
+  governance_budget_policies  governance_budget_policies @relation(fields: [governance_budget_policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scope_governance_budget_policies_governance_budget_policy_id_go")
+
+  @@index([governance_budget_policy_id], map: "scope_governance_budget_policies_policy_idx")
+  @@index([scope_ref, status], map: "scope_governance_budget_policies_scope_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model scope_rate_limit_policies {
+  id                   String              @id
+  scope_ref            String
+  rate_limit_policy_id String
+  status               String
+  created_at           String
+  updated_at           String
+  rate_limit_policies  rate_limit_policies @relation(fields: [rate_limit_policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scope_rate_limit_policies_rate_limit_policy_id_rate_limit_polic")
+
+  @@index([rate_limit_policy_id], map: "scope_rate_limit_policies_policy_idx")
+  @@index([scope_ref, status], map: "scope_rate_limit_policies_scope_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model seller_settlement_events {
+  id                    String               @id
+  plan_subscription_id  String?
+  authority_purchase_id String?              @unique(map: "seller_settlement_events_authority_release_unique", where: raw("((authority_purchase_id IS NOT NULL) AND (event_type = 'release'::text))"))
+  seller_scope_ref      String
+  window_start          String
+  window_end            String
+  release_at            String
+  event_type            String
+  amount_units          BigInt
+  source_type           String
+  source_id             String
+  created_at            String
+  authority_purchases   authority_purchases? @relation(fields: [authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "seller_settlement_events_authority_purchase_id_authority_purcha")
+  plan_subscriptions    plan_subscriptions?  @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "seller_settlement_events_plan_subscription_id_plan_subscription")
+
+  @@unique([event_type, source_type, source_id, window_start], map: "seller_settlement_events_source_unique")
+  @@index([seller_scope_ref, release_at], map: "seller_settlement_events_seller_idx")
+  @@index([release_at, plan_subscription_id, authority_purchase_id, seller_scope_ref, window_start], map: "seller_settlement_events_release_candidate_idx", where: raw("(event_type = 'revenue'::text)"))
+  @@index([plan_subscription_id, authority_purchase_id, seller_scope_ref, window_start, event_type], map: "seller_settlement_events_state_idx")
+  @@index([release_at, plan_subscription_id, authority_purchase_id, window_start], map: "seller_settlement_events_window_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model seller_settlement_windows {
+  window_key            String               @id
+  plan_subscription_id  String?
+  authority_purchase_id String?
+  seller_scope_ref      String
+  window_start          String
+  window_end            String
+  release_at            String
+  next_attempt_at       String
+  status                String               @default("open")
+  updated_at            String
+  authority_purchases   authority_purchases? @relation(fields: [authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "seller_settlement_windows_authority_fk")
+  plan_subscriptions    plan_subscriptions?  @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "seller_settlement_windows_plan_fk")
+
+  @@index([status, next_attempt_at, release_at, window_key], map: "seller_settlement_windows_due_idx")
+  @@index([plan_subscription_id, authority_purchase_id, seller_scope_ref, window_start], map: "seller_settlement_windows_source_idx")
+}
+
+model service_fulfillments {
+  id                                                     String         @id
+  order_id                                               String
+  effect_type                                            String
+  target_type                                            String?
+  target_id                                              String?
+  status                                                 String
+  initiated_by_user_id                                   String
+  completed_by_user_id                                   String?
+  error_code                                             String?
+  created_at                                             String
+  completed_at                                           String?
+  updated_at                                             String
+  users_service_fulfillments_completed_by_user_idTousers user_controls?         @relation("service_fulfillments_completed_by_user_idTousers", fields: [completed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_fulfillments_completed_by_user_id_users_fk_3")
+  users_service_fulfillments_initiated_by_user_idTousers user_controls          @relation("service_fulfillments_initiated_by_user_idTousers", fields: [initiated_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_fulfillments_initiated_by_user_id_users_fk_2")
+  service_orders                                         service_orders @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_fulfillments_order_id_service_orders_fk_1")
+
+  @@unique([order_id, effect_type], map: "service_fulfillments_order_effect_unique")
+  @@index([status, created_at], map: "service_fulfillments_status_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model service_orders {
+  id                                              String                             @id
+  buyer_user_id                                   String
+  target_partner_team_id                          String?
+  product_id                                      String
+  product_listing_id                              String
+  payment_channel_id                              String
+  product_code                                    String
+  product_version                                 Int
+  product_display_name                            String
+  fulfillment_effect                              String
+  duration_seconds                                Int
+  partner_plan_id                                 String
+  purchase_intent                                 String
+  expected_payment_amount_units                   BigInt
+  confirmed_received_amount_units                 BigInt?
+  payment_asset                                   String
+  payment_network                                 String
+  normalized_transaction_reference_hash           String?
+  transaction_reference_tail                      String?
+  payment_submitted_at                            String?
+  reviewed_by_user_id                             String?
+  reviewed_at                                     String?
+  review_note                                     String?
+  status                                          String
+  create_idempotency_key_hash                     String
+  create_request_hash                             String
+  created_at                                      String
+  updated_at                                      String
+  domain_binding_slots                            domain_binding_slots?
+  partner_operating_entitlements                  partner_operating_entitlements?
+  partner_team_creation_allocations               partner_team_creation_allocations?
+  service_fulfillments                            service_fulfillments[]
+  users_service_orders_buyer_user_idTousers       user_controls                              @relation("service_orders_buyer_user_idTousers", fields: [buyer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_buyer_user_id_users_fk_1")
+  plans                                           plans                              @relation(fields: [partner_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_partner_plan_id_plans_fk_6")
+  payment_channels                                payment_channels                   @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_payment_channel_id_payment_channels_fk_5")
+  service_products                                service_products                   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_product_id_service_products_fk_3")
+  service_product_listings                        service_product_listings           @relation(fields: [product_listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_product_listing_id_service_product_listings_fk_4")
+  users_service_orders_reviewed_by_user_idTousers user_controls?                             @relation("service_orders_reviewed_by_user_idTousers", fields: [reviewed_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_reviewed_by_user_id_users_fk_7")
+  teams                                           teams?                             @relation(fields: [target_partner_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_orders_target_partner_team_id_teams_fk_2")
+
+  @@unique([buyer_user_id, create_idempotency_key_hash], map: "service_orders_buyer_idempotency_unique")
+  @@unique([payment_network, normalized_transaction_reference_hash], map: "service_orders_payment_reference_unique", where: raw("(normalized_transaction_reference_hash IS NOT NULL)"))
+  @@index([buyer_user_id, created_at], map: "service_orders_buyer_created_idx")
+  @@index([status, created_at], map: "service_orders_status_created_idx")
+  @@index([target_partner_team_id, created_at], map: "service_orders_team_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model service_product_listings {
+  id                 String           @id
+  product_id         String
+  payment_channel_id String
+  price_amount_units BigInt
+  status             String
+  created_at         String
+  service_orders     service_orders[]
+  payment_channels   payment_channels @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_product_listings_payment_channel_id_payment_channels_fk")
+  service_products   service_products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_product_listings_product_id_service_products_fk_1")
+
+  @@unique([product_id, payment_channel_id], map: "service_product_listings_enabled_unique", where: raw("(status = 'enabled'::text)"))
+  @@index([payment_channel_id, status, created_at], map: "service_product_listings_channel_idx")
+  @@index([product_id, status, created_at], map: "service_product_listings_product_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model service_products {
+  id                       String                     @id
+  code                     String
+  version                  Int
+  display_name             String
+  description              String?
+  fulfillment_effect       String
+  duration_seconds         Int
+  partner_plan_id          String
+  status                   String
+  created_by_user_id       String
+  created_at               String
+  service_orders           service_orders[]
+  service_product_listings service_product_listings[]
+  users                    user_controls                      @relation(fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_products_created_by_user_id_users_fk_2")
+  plans                    plans                      @relation(fields: [partner_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_products_partner_plan_id_plans_fk_1")
+
+  @@unique([code, version], map: "service_products_code_version_unique")
+  @@index([status, created_at], map: "service_products_status_created_idx")
+}
+
+model shared_pg_release_transactions {
+  transaction_id       String @id
+  blue_green_group_id  String
+  database_resource_id String @unique(map: "shared_pg_release_transactions_active_resource_unique", where: raw("(phase <> ALL (ARRAY['completed'::text, 'failed'::text]))"))
+  release_tag          String
+  release_commit       String
+  state_revision       Int
+  phase                String
+  canonical_target     String
+  direct_dev_state     String
+  schema_before        Int
+  schema_after         Int?
+  state_json           String
+  updated_at           String
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model stripe_webhook_events {
+  event_id               String                @id
+  event_type             String
+  livemode               Int
+  checkout_session_tail  String?
+  topup_id               String?
+  plan_purchase_order_id String?
+  status                 String
+  error_code             String?
+  created_at             String
+  updated_at             String
+  processed_at           String?
+  plan_purchase_orders   plan_purchase_orders? @relation(fields: [plan_purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stripe_webhook_events_plan_purchase_order_id_plan_purchase_orde")
+  credit_topups          credit_topups?        @relation(fields: [topup_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stripe_webhook_events_topup_id_credit_topups_fk_1")
+
+  @@index([plan_purchase_order_id, created_at], map: "stripe_webhook_events_plan_purchase_order_created_idx")
+  @@index([status, updated_at], map: "stripe_webhook_events_status_updated_idx")
+  @@index([topup_id, created_at], map: "stripe_webhook_events_topup_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model identity_migration_batches {
+  id                         String                       @id
+  migration_kind             String
+  rule_version               String
+  snapshot_digest            String
+  observed_user_count        Int
+  status                     String
+  created_at                 String
+  started_at                 String?
+  completed_at               String?
+  identity_migration_records identity_migration_records[]
+
+  @@index([migration_kind, created_at, id], map: "identity_migration_batches_kind_created_idx")
+}
+
+/// Append-only administrator handoff facts for one-time Identity upgrades.
+model identity_migration_records {
+  id                  String                     @id
+  batch_id            String
+  email_fingerprint   String
+  source_user_id      String
+  survivor_user_id    String
+  outcome             String
+  conflict_types_json String
+  created_at          String
+  batch               identity_migration_batches @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "identity_migration_records_batch_id_fk")
+
+  @@index([batch_id, created_at, id], map: "identity_migration_records_batch_created_idx")
+  @@index([source_user_id, created_at, id], map: "identity_migration_records_source_created_idx")
+}
+
+model team_deletion_lifecycles {
+  id                          String  @id
+  team_id                     String  @unique(map: "team_deletion_lifecycles_active_team_unique", where: raw("((cancelled_at IS NULL) AND (purged_at IS NULL))"))
+  requested_at                String
+  requested_by_user_id        String
+  purge_not_before            String
+  archive_status              String  @default("pending")
+  archive_manifest_id         String?
+  archive_manifest_object_key String?
+  archive_manifest_sha256     String?
+  archive_coverage_json       String?
+  archived_at                 String?
+  cancelled_at                String?
+  purged_at                   String?
+
+  @@index([team_id, requested_at], map: "team_deletion_lifecycles_team_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model team_invite_links {
+  id                        String                      @id
+  team_id                   String
+  created_by_user_id        String
+  max_uses                  Int?
+  used_count                Int?
+  active_limit_exempt       Int                         @default(0)
+  status                    String
+  created_at                String
+  updated_at                String
+  domain_bindings           domain_bindings[]
+  users                     user_controls                       @relation(fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_invite_links_created_by_user_id_users_fk_2")
+  teams                     teams                       @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_invite_links_team_id_teams_fk_1")
+  team_memberships          team_memberships[]
+  web_registration_settings web_registration_settings[]
+
+  @@unique([team_id, created_by_user_id], map: "team_invite_links_active_creator_unique", where: raw("((status = 'enabled'::text) AND (active_limit_exempt = 0))"))
+  @@index([created_by_user_id], map: "team_invite_links_creator_idx")
+  @@index([team_id, status], map: "team_invite_links_team_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model team_memberships {
+  id                String             @id
+  team_id           String
+  user_id           String
+  roles_json        String             @default("[\"viewer\"]")
+  by_invite_link    String?
+  created_at        String
+  updated_at        String
+  team_invite_links team_invite_links? @relation(fields: [by_invite_link], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_memberships_by_invite_link_team_invite_links_fk_3")
+  teams             teams              @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_memberships_team_id_teams_fk_1")
+  users             user_controls              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_memberships_user_id_users_fk_2")
+
+  @@unique([team_id, user_id], map: "team_memberships_team_user_unique")
+  @@index([team_id], map: "team_memberships_team_idx")
+  @@index([user_id], map: "team_memberships_user_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model team_provider_entitlements {
+  id                                                          String               @id
+  team_id                                                     String               @unique(map: "team_provider_entitlements_legacy_team_unique", where: raw("(source_kind = 'legacy_migration'::text)"))
+  source_kind                                                 String
+  source_authority_purchase_id                                String?              @unique(map: "team_provider_entitlements_purchase_unique")
+  source_authority_product_id                                 String?
+  source_product_code_snapshot                                String?
+  source_product_version_snapshot                             Int?
+  source_product_display_name_snapshot                        String?
+  buyer_user_id                                               String?
+  issued_by_user_id                                           String?
+  effective_start                                             String
+  effective_end                                               String?
+  lifecycle                                                   String
+  canceled_at                                                 String?
+  canceled_by_user_id                                         String?
+  cancel_reason_code                                          String?
+  idempotency_key_hash                                        String?
+  request_hash                                                String?
+  created_at                                                  String
+  users_team_provider_entitlements_buyer_user_idTousers       user_controls?               @relation("team_provider_entitlements_buyer_user_idTousers", fields: [buyer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_buyer_user_id_users_fk_4")
+  users_team_provider_entitlements_canceled_by_user_idTousers user_controls?               @relation("team_provider_entitlements_canceled_by_user_idTousers", fields: [canceled_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_canceled_by_user_id_users_fk_6")
+  users_team_provider_entitlements_issued_by_user_idTousers   user_controls?               @relation("team_provider_entitlements_issued_by_user_idTousers", fields: [issued_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_issued_by_user_id_users_fk_5")
+  authority_products                                          authority_products?  @relation(fields: [source_authority_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_source_authority_product_id_authorit")
+  authority_purchases                                         authority_purchases? @relation(fields: [source_authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_source_authority_purchase_id_authori")
+  teams                                                       teams                @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_provider_entitlements_team_id_teams_fk_1")
+
+  @@unique([issued_by_user_id, idempotency_key_hash], map: "team_provider_entitlements_admin_idempotency_unique", where: raw("(source_kind = 'admin_grant'::text)"))
+  @@index([team_id, lifecycle, effective_start, effective_end, id], map: "team_provider_entitlements_team_period_idx")
+}
+
+model teams {
+  id                                         String                              @id
+  owner_id                                   String
+  name                                       String
+  status                                     String
+  team_owner_can_manage_member_api_key_limit Int                                 @default(0)
+  team_owner_can_manage_member_credit        Int                                 @default(0)
+  team_owner_can_create_custom_provider      Int                                 @default(0)
+  team_owner_can_create_access_point         Int                                 @default(0)
+  invite_email_domain_pattern                String?
+  created_at                                 String
+  updated_at                                 String
+  domain_binding_teams                       domain_binding_teams[]
+  domain_bindings                            domain_bindings[]
+  partner_operating_entitlements             partner_operating_entitlements[]
+  partner_team_creation_allocations          partner_team_creation_allocations[]
+  request_logs                               request_logs[]
+  service_orders                             service_orders[]
+  team_invite_links                          team_invite_links[]
+  team_memberships                           team_memberships[]
+  team_provider_entitlements                 team_provider_entitlements?
+  users                                      user_controls[]
+  web_registration_settings                  web_registration_settings[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+/// Stable commercial identity for one purchased personal Provider slot.
+/// Terminal retention is controlled state; Provider/AP cleanup can retry without restoring the slot.
+model user_provider_slots {
+  id                               String                              @id
+  user_id                          String
+  managed_plan_id                  String                              @unique(map: "user_provider_slots_managed_plan_unique")
+  provider_id                      String?                             @unique(map: "user_provider_slots_provider_unique")
+  created_by_authority_purchase_id String                              @unique(map: "user_provider_slots_purchase_unique")
+  retention_expired_at             String?
+  cleanup_status                   String                              @default("not_due")
+  cleanup_error_code               String?
+  cleanup_updated_at               String?
+  created_at                       String
+  users                            user_controls                               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_slots_user_id_fk")
+  managed_plan                     plans                               @relation(fields: [managed_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_slots_managed_plan_id_fk")
+  provider                         providers?                          @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_slots_provider_id_fk")
+  created_by_authority_purchase    authority_purchases                 @relation(fields: [created_by_authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_slots_purchase_id_fk")
+  entitlement_periods              user_provider_entitlement_periods[]
+  access_points                    AccessPoint[]
+
+  @@index([user_id, created_at, id], map: "user_provider_slots_user_created_idx")
+  @@index([cleanup_status, retention_expired_at, id], map: "user_provider_slots_cleanup_idx")
+}
+
+/// Append-only entitlement period. Renewal appends a row and a matching Subscription.
+model user_provider_entitlement_periods {
+  id                                   String              @id
+  provider_slot_id                     String
+  user_id                              String
+  source_authority_purchase_id         String              @unique(map: "user_provider_entitlement_periods_purchase_unique")
+  source_authority_product_id          String
+  source_product_code_snapshot         String
+  source_product_version_snapshot      Int
+  source_product_display_name_snapshot String
+  purchase_amount_units_snapshot       BigInt
+  duration_days_snapshot               Int
+  renewal_admitted_at                  String
+  fulfillment_succeeded_at             String
+  effective_start                      String
+  effective_end                        String
+  plan_subscription_id                 String              @unique(map: "user_provider_entitlement_periods_subscription_unique")
+  lifecycle                            String              @default("active")
+  created_at                           String
+  provider_slot                        user_provider_slots @relation(fields: [provider_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_entitlement_periods_slot_id_fk")
+  users                                user_controls               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_entitlement_periods_user_id_fk")
+  authority_purchase                   authority_purchases @relation(fields: [source_authority_purchase_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_entitlement_periods_purchase_id_fk")
+  authority_product                    authority_products  @relation(fields: [source_authority_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_entitlement_periods_product_id_fk")
+  plan_subscription                    plan_subscriptions  @relation(fields: [plan_subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_provider_entitlement_periods_subscription_id_fk")
+
+  @@index([provider_slot_id, effective_end, id], map: "user_provider_entitlement_periods_slot_end_idx")
+  @@index([user_id, effective_end, id], map: "user_provider_entitlement_periods_user_end_idx")
+}
+
+model user_model_plan_scope_orders {
+  id                        String @id
+  user_id                   String
+  exposed_model             String
+  plan_id                   String
+  subscription_scope_ref    String
+  position                  Int
+  default_priority          Int
+  default_effective_start   String
+  default_source_created_at String
+  default_source_id         String
+  created_at                String
+  updated_at                String
+  plans                     plans  @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_model_plan_scope_orders_plan_id_plans_fk_2")
+  users                     user_controls  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_model_plan_scope_orders_user_id_users_fk_1")
+
+  @@unique([user_id, exposed_model, plan_id, subscription_scope_ref], map: "user_model_plan_scope_orders_source_unique")
+  @@index([user_id, exposed_model, position, id], map: "user_model_plan_scope_orders_group_idx")
+  @@index([subscription_scope_ref], map: "user_model_plan_scope_orders_subscription_scope_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model user_controls {
+  id                                                                               String                                    @id
+  team_id                                                                          String?
+  /// Deprecated rollback-window copy. Runtime identity reads use user.email.
+  email                                                                            String?
+  /// Deprecated rollback-window copy. Runtime credential reads use account.password.
+  password_hash                                                                    String?
+  auth_version                                                                     Int                                       @default(1)
+  status                                                                           String
+  admin_note                                                                       String?
+  api_key_limit                                                                    Int                                       @default(3)
+  user_can_create_custom_provider                                                  Int                                       @default(0)
+  user_can_create_access_point                                                     Int                                       @default(0)
+  migration_frozen_at                                                              String?
+  migration_freeze_reason                                                          String?
+  created_at                                                                       String
+  updated_at                                                                       String
+  admin_grant_batch_items                                                          admin_grant_batch_items[]
+  admin_grant_batches                                                              admin_grant_batches[]
+  api_keys                                                                         api_keys[]
+  authority_grants_authority_grants_beneficiary_user_idTousers                     authority_grants[]                        @relation("authority_grants_beneficiary_user_idTousers")
+  authority_grants_authority_grants_canceled_by_user_idTousers                     authority_grants[]                        @relation("authority_grants_canceled_by_user_idTousers")
+  authority_grants_authority_grants_issued_by_user_idTousers                       authority_grants[]                        @relation("authority_grants_issued_by_user_idTousers")
+  authority_products                                                               authority_products[]
+  authority_purchases                                                              authority_purchases[]
+  authority_refunds                                                                authority_refunds[]
+  authority_uses_authority_uses_actor_user_idTousers                               authority_uses[]                          @relation("authority_uses_actor_user_idTousers")
+  authority_uses_authority_uses_beneficiary_user_idTousers                         authority_uses[]                          @relation("authority_uses_beneficiary_user_idTousers")
+  card_activation_batches_card_activation_batches_created_by_user_idTousers        card_activation_batches[]                 @relation("card_activation_batches_created_by_user_idTousers")
+  card_activation_batches_card_activation_batches_revoked_by_user_idTousers        card_activation_batches[]                 @relation("card_activation_batches_revoked_by_user_idTousers")
+  card_activation_codes_card_activation_codes_redeemed_by_user_idTousers           card_activation_codes[]                   @relation("card_activation_codes_redeemed_by_user_idTousers")
+  card_activation_codes_card_activation_codes_revoked_by_user_idTousers            card_activation_codes[]                   @relation("card_activation_codes_revoked_by_user_idTousers")
+  card_transfers_card_transfers_from_user_idTousers                                card_transfers[]                          @relation("card_transfers_from_user_idTousers")
+  card_transfers_card_transfers_to_user_idTousers                                  card_transfers[]                          @relation("card_transfers_to_user_idTousers")
+  cards                                                                            cards[]
+  credit_topup_attachments                                                         credit_topup_attachments[]
+  credit_topups_credit_topups_cancelled_by_user_idTousers                          credit_topups[]                           @relation("credit_topups_cancelled_by_user_idTousers")
+  credit_topups_credit_topups_refund_recorded_by_user_idTousers                    credit_topups[]                           @relation("credit_topups_refund_recorded_by_user_idTousers")
+  credit_topups_credit_topups_reversed_by_user_idTousers                           credit_topups[]                           @relation("credit_topups_reversed_by_user_idTousers")
+  credit_topups_credit_topups_reviewed_by_user_idTousers                           credit_topups[]                           @relation("credit_topups_reviewed_by_user_idTousers")
+  credit_topups_credit_topups_user_idTousers                                       credit_topups[]                           @relation("credit_topups_user_idTousers")
+  domain_binding_slots                                                             domain_binding_slots[]
+  domain_bindings_domain_bindings_activated_by_user_idTousers                      domain_bindings[]                         @relation("domain_bindings_activated_by_user_idTousers")
+  domain_bindings_domain_bindings_disabled_by_user_idTousers                       domain_bindings[]                         @relation("domain_bindings_disabled_by_user_idTousers")
+  domain_bindings_domain_bindings_owner_user_idTousers                             domain_bindings[]                         @relation("domain_bindings_owner_user_idTousers")
+  domain_bindings_domain_bindings_released_by_user_idTousers                       domain_bindings[]                         @relation("domain_bindings_released_by_user_idTousers")
+  domain_bindings_domain_bindings_verified_by_user_idTousers                       domain_bindings[]                         @relation("domain_bindings_verified_by_user_idTousers")
+  ingress_plugin_settings                                                          ingress_plugin_settings[]
+  mcp_orchestration_runs                                                           mcp_orchestration_runs[]
+  oidc_access_tokens                                                               oidc_access_tokens[]
+  oidc_authorization_codes                                                         oidc_authorization_codes[]
+  oidc_refresh_tokens                                                              oidc_refresh_tokens[]
+  partner_operating_entitlements                                                   partner_operating_entitlements[]
+  partner_team_creation_allocations                                                partner_team_creation_allocations[]
+  passkey_credentials                                                              passkey_credentials[]
+  payment_channel_instruction_attachments                                          payment_channel_instruction_attachments[]
+  payment_channels                                                                 payment_channels[]
+  pipeline_plugin_settings                                                         pipeline_plugin_settings[]
+  plan_purchase_orders_plan_purchase_orders_buyer_user_idTousers                   plan_purchase_orders[]                    @relation("plan_purchase_orders_buyer_user_idTousers")
+  plan_purchase_orders_plan_purchase_orders_reversed_by_user_idTousers             plan_purchase_orders[]                    @relation("plan_purchase_orders_reversed_by_user_idTousers")
+  refresh_tokens                                                                   refresh_tokens[]
+  request_logs                                                                     request_logs[]
+  service_fulfillments_service_fulfillments_completed_by_user_idTousers            service_fulfillments[]                    @relation("service_fulfillments_completed_by_user_idTousers")
+  service_fulfillments_service_fulfillments_initiated_by_user_idTousers            service_fulfillments[]                    @relation("service_fulfillments_initiated_by_user_idTousers")
+  service_orders_service_orders_buyer_user_idTousers                               service_orders[]                          @relation("service_orders_buyer_user_idTousers")
+  service_orders_service_orders_reviewed_by_user_idTousers                         service_orders[]                          @relation("service_orders_reviewed_by_user_idTousers")
+  service_products                                                                 service_products[]
+  team_invite_links                                                                team_invite_links[]
+  team_memberships                                                                 team_memberships[]
+  team_provider_entitlements_team_provider_entitlements_buyer_user_idTousers       team_provider_entitlements[]              @relation("team_provider_entitlements_buyer_user_idTousers")
+  team_provider_entitlements_team_provider_entitlements_canceled_by_user_idTousers team_provider_entitlements[]              @relation("team_provider_entitlements_canceled_by_user_idTousers")
+  team_provider_entitlements_team_provider_entitlements_issued_by_user_idTousers   team_provider_entitlements[]              @relation("team_provider_entitlements_issued_by_user_idTousers")
+  user_model_plan_scope_orders                                                     user_model_plan_scope_orders[]
+  user_provider_slots                                                              user_provider_slots[]
+  user_provider_entitlement_periods                                                user_provider_entitlement_periods[]
+  teams                                                                            teams?                                    @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_team_id_teams_fk_1")
+  web_registration_settings                                                        web_registration_settings[]
+  webauthn_ceremonies                                                              webauthn_ceremonies[]
+  webauthn_user_handles                                                            webauthn_user_handles?
+  identity                                                                         user?
+
+  @@index([team_id], map: "user_controls_team_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model web_registration_settings {
+  id                          String             @id
+  default_team_id             String?
+  registration_invite_link_id String?
+  updated_by_user_id          String?
+  created_at                  String
+  updated_at                  String
+  teams                       teams?             @relation(fields: [default_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "web_registration_settings_default_team_id_teams_fk_1")
+  team_invite_links           team_invite_links? @relation(fields: [registration_invite_link_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "web_registration_settings_registration_invite_link_id_team_invi")
+  users                       user_controls?             @relation(fields: [updated_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "web_registration_settings_updated_by_user_id_users_fk_3")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model webauthn_ceremonies {
+  session_hash          String  @id
+  challenge_hash        String
+  purpose               String
+  surface               String
+  user_id               String?
+  expected_auth_version Int?
+  rp_id                 String
+  origin                String
+  passkey_name          String?
+  expires_at            String
+  created_at            String
+  users                 user_controls?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "webauthn_ceremonies_user_id_users_fk_1")
+
+  @@index([expires_at], map: "webauthn_ceremonies_expiry_idx")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model webauthn_user_handles {
+  user_id     String @id
+  user_handle String @unique(map: "webauthn_user_handles_handle_unique")
+  created_at  String
+  users       user_controls  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "webauthn_user_handles_user_id_users_fk_1")
+}
+
+/// Better Auth's standard identity table. Friday business controls remain in
+/// the separate user_controls table and are intentionally not modeled as
+/// additional Better Auth fields.
+model user {
+  id            String    @id
+  name          String
+  email         String    @unique(map: "user_email_unique")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime  @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @map("updated_at") @db.Timestamptz(3)
+  accounts      account[]
+  sessions      session[]
+  controls      user_controls @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_controls_id_user_fk")
+
+  @@map("user")
+}
+
+/// Better Auth's standard credential/external-account table.
+model account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  issuer                String
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @map("updated_at") @db.Timestamptz(3)
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_user_id_user_fk")
+
+  @@unique([issuer, accountId], map: "account_issuer_account_id_unique")
+  @@index([userId], map: "account_user_id_idx")
+  @@map("account")
+}
+
+/// Better Auth's standard database-backed session table. The token column
+/// contains the project HMAC, never the bearer value sent to a browser.
+model session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  token     String   @unique(map: "session_token_unique")
+  createdAt DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_user_id_user_fk")
+
+  @@index([userId], map: "session_user_id_idx")
+  @@map("session")
+}
+
+/// Better Auth's standard one-time verification state. Values are stored as
+/// hashes by the runtime adapter/configuration and consumed atomically.
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier], map: "verification_identifier_idx")
+  @@map("verification")
+}

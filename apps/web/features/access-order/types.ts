@@ -1,0 +1,3 @@
+export interface AccessOrderItem { id: string; exposedModel: string; planName: string; planId: string | null; subscriptionScopeRef: string | null; currentSubscriptionId: string | null; status: "available" | "unavailable" | "invalid_configuration"; configurationError: "overlapping_active_subscriptions" | "multiple_entry_access_points" | "entry_access_point_missing" | null; accessPoint: { id: string; name: string; description: string | null } | null }
+export interface SaveAccessOrderInput { model: string; orderedPlanScopeIds: string[] }
+export interface MoveAccessOrderInput { model: string; orderId: string; placement: "before" | "after"; anchorId: string | null }

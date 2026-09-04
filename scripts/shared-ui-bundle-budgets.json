@@ -1,0 +1,12 @@
+{
+  "web": {
+    "/user/credits": 1510000,
+    "/user/request-history": 1530000,
+    "/user/team/[teamId]": 1570000
+  },
+  "admin": {
+    "/owner/teams/[teamId]": 1600000,
+    "/owner/users/[userId]": 1590000,
+    "/owner/users/[userId]/request-history": 1520000
+  }
+}

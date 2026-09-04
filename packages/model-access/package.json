@@ -1,0 +1,43 @@
+{
+  "name": "@frely/model-access",
+  "version": "0.64.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./routing-runtime": {
+      "types": "./dist/routing-runtime.d.ts",
+      "import": "./dist/routing-runtime.js"
+    },
+    "./server": {
+      "types": "./dist/public-server.d.ts",
+      "import": "./dist/public-server.js"
+    },
+    "./application-internal": {
+      "types": "./dist/application-internal.d.ts",
+      "import": "./dist/application-internal.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@frely/audit": "workspace:*",
+    "@frely/core": "workspace:*",
+    "@frely/postgres": "workspace:*",
+    "canonicalize": "^3.0.0"
+  },
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrelyHQ/frely.git"
+  }
+}
