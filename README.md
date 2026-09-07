@@ -14,6 +14,8 @@ The snapshot provides a sanitized view of Frely's architecture, domain boundarie
 - Audit and observability boundaries.
 - User and Owner console structure.
 - Prisma schema and migration lineage.
+- The development boundary for routing a billed `vision-basic` AccessPoint to
+  the public Swarm virtual-model snapshot.
 
 ## What this snapshot does not provide
 
@@ -22,7 +24,9 @@ The snapshot provides a sanitized view of Frely's architecture, domain boundarie
 - Private incident history, release history or operational runbooks.
 - A guarantee that every included service is ready for production use.
 
-Start with the [reviewer guide](docs/reviewer-guide.md), then read the [architecture](docs/architecture.md) and [Frely Network integration notes](docs/frely-network-integration.md).
+Start with the [reviewer guide](docs/reviewer-guide.md), then read the
+[architecture](docs/architecture.md), [Swarm Vision development integration](docs/swarm-vision-integration.md),
+and [Frely Network integration notes](docs/frely-network-integration.md).
 
 The source snapshot version is 0.64.1. The source relationship is recorded in [SNAPSHOT_PROVENANCE.json](SNAPSHOT_PROVENANCE.json).
 

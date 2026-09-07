@@ -9,9 +9,16 @@ Frely is the control plane that exposes authenticated model access and coordinat
 3. Frely-owned policy checks run before provider side effects.
 4. The Gateway dispatches the admitted request through the CPA contract.
 5. CPA performs Provider-specific protocol work and returns execution evidence.
+   For the hackathon Vision demo, the selected `openai-compatible` Provider
+   endpoint is the public Swarm snapshot's Responses API.
 6. Frely records allowlisted request, usage, billing, audit and timing facts.
 
 CPA is the only Provider Runtime. Relay code coordinates the call but does not implement a second Provider tokenizer, Provider protocol runtime or Provider-specific evidence producer.
+
+In this snapshot's demo terminology, Swarm is the upstream virtual-model
+runtime. It runs `vision-basic` and keeps the backing-model key; Frely remains
+the authenticated, priced model entry. See [Swarm Vision development
+integration](swarm-vision-integration.md).
 
 ## Service boundaries
 
