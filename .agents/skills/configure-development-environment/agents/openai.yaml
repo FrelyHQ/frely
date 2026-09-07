@@ -1,0 +1,4 @@
+interface:
+  display_name: "Configure Relay Development Environment"
+  short_description: "Configure Relay dependencies and local environment"
+  default_prompt: "Use $configure-development-environment to configure this Relay checkout for local development."
